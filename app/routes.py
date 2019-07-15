@@ -7,6 +7,9 @@ import os
 import shutil
 import random
 
+width=600
+height=600
+
 @app.route('/')
 def index():
     return "This is a markup service"
@@ -14,7 +17,7 @@ def index():
 
 @app.route('/markup')
 def markup():
-    return render_template('markup.html',width=600,height=600)
+    return render_template('markup.html',width=width,height=height)
 
 @app.route('/images/<path:filename>')
 def return_image(filename):
