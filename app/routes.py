@@ -5,6 +5,7 @@ from flask import request
 import json
 import os
 import shutil
+import random
 
 @app.route('/')
 def index():
@@ -21,7 +22,14 @@ def return_image(filename):
 
 @app.route('/get_random_pic_name')
 def get_random_pic_name():
-    return "images/0.jpg"
+    dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),'images')
+    files=os.listdir(dir)
+    if len(files)==0:
+        return "images/fail"
+    else:
+        index=random.randint(0,len(files)-1)
+        return 'images/'+files[index]
+
 
 @app.route('/save',methods=['POST'])
 def savePost():
