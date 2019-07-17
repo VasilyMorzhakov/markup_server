@@ -7,6 +7,13 @@ import os
 import shutil
 import random
 
+USE_AWS = True
+
+if USE_AWS:
+    import boto3
+    bucket_name="bus.markup"
+    s3 = boto3.resource('s3')
+
 temp={}
 temp['applications']=[]
 temp['applications'].append('bus')
@@ -72,9 +79,17 @@ def savePost(application):
 
         image_path = directory+'/data'+fn
         mark_path = directory+'/data'+fn_json
+        image_path_new = image_path.replace('images/','processed/')
+        mark_path_new = mark_path.replace('images/','processed/')
         #move to processed
-        shutil.move(image_path, image_path.replace('images/','processed/'))
-        shutil.move(mark_path, mark_path.replace('images/','processed/'))
+        shutil.move(image_path, image_path_new)
+        shutil.move(mark_path, mark_path_new)
+        
+        if USE_AWS:
+            with open(mark_path_new) as data:
+                s3.Bucket(bucket_name).put_object(Key=mark_path_new, Body=data)
+            with open(image_path_new) as data:
+                s3.Bucket(bucket_name).put_object(Key=image_path_new, Body=data)
 
         return "ok"
     else:
