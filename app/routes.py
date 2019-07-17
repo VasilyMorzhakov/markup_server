@@ -64,15 +64,17 @@ def savePost(application):
         dict=json.loads(data.decode())
         fn=dict['imageName']
         fn_json=fn.replace('.jpg','.json')
-        dir=os.path.dirname(os.path.realpath(__file__))
+        directory=os.path.dirname(os.path.realpath(__file__))
 
-        f=open(dir+'/data'+fn_json,'wb')
+        f=open(directory+'/data'+fn_json,'wb')
         f.write(data)
         f.close()
 
+        image_path = directory+'/data'+fn
+        mark_path = directory+'/data'+fn_json
         #move to processed
-        shutil.move(dir+'/data'+fn,dir+'/data'+fn.replace('images/','processed/'))
-        shutil.move(dir+'/data'+fn_json, dir+'/data'+fn_json.replace('images/','processed/'))
+        shutil.move(image_path, image_path.replace('images/','processed/'))
+        shutil.move(mark_path, mark_path.replace('images/','processed/'))
 
         return "ok"
     else:
