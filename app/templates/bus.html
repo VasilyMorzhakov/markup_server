@@ -113,7 +113,7 @@
         res.types=types;
         str=JSON.stringify(res);
 
-        httpPost('/save',str);
+        httpPost('/save/bus',str);
     }
 
     document.onkeydown = function(evt) {
@@ -154,7 +154,7 @@
       {
         draw(rects,types,type);
       };
-      imageName= httpGet('/get_random_pic_name');
+      imageName= httpGet('/bus/get_random_pic_name');
       imageObj.src =imageName;
     </script>
   </body>
