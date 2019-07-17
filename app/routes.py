@@ -1,18 +1,16 @@
 from app import app
 from flask import render_template
-from flask import send_from_directory
+from flask import send_from_directory, send_file
 from flask import request
 import json
 import os
 import shutil
 import random
 
-USE_AWS = True
 
-if USE_AWS:
-    import boto3
-    bucket_name="bus.markup"
-    s3 = boto3.resource('s3')
+import boto3
+s3 = boto3.resource('s3')
+s3_client  = boto3.client('s3')
 
 temp={}
 temp['applications']=[]
@@ -44,26 +42,32 @@ def markup(application):
 
 @app.route('/<string:application>/images/<path:filename>')
 def return_image(application,filename):
-
-    return send_from_directory(os.path.join(os.path.dirname(os.path.realpath(__file__)),'data',application,'images'),filename)
+    bucket_name = application + ".markup"
+    file_key = "images/" + filename
+    response = s3_client.get_object(Bucket=bucket_name, Key=file_key)
+    data = response['Body']
+    return send_file(data, attachment_filename=filename)
 
 @app.route('/<string:application>/get_random_pic_name')
 def get_random_pic_name(application):
-
-    dir = os.path.join(os.path.dirname(os.path.realpath(__file__)),'data',application,'images')
-    if os.path.exists(dir):
-        files=os.listdir(dir)
-        if len(files)==0:
-            return "/"+application+"/images/fail"
-        else:
-            index=random.randint(0,len(files)-1)
-            return "/"+application+'/images/'+files[index]
+    bucket_name = application + ".markup"
+    #query all files and dirs
+    #if error hapens, app crashes
+    response = s3_client.list_objects_v2(Bucket=bucket_name)
+    elements = [c["Key"] for c in response['Contents']]
+    print(elements)
+    elements = [e for e in elements if e.startswith("images") and e.endswith(".jpg")]
+    if len(elements) == 0:
+        return None #"/"+application+"/images/fail"
     else:
-        return "None"
+        index=random.randint(0,len(elements)-1)
+        print("send , ", elements[index])
+        return elements[index]
 
 
 @app.route('/save/<string:application>',methods=['POST'])
 def savePost(application):
+    bucket_name = application + ".markup"
 
     if application in config['applications']:
         data = request.data
@@ -73,23 +77,14 @@ def savePost(application):
         fn_json=fn.replace('.jpg','.json')
         directory=os.path.dirname(os.path.realpath(__file__))
 
-        f=open(directory+'/data'+fn_json,'wb')
-        f.write(data)
-        f.close()
-
-        image_path = directory+'/data'+fn
-        mark_path = directory+'/data'+fn_json
-        image_path_new = image_path.replace('images/','processed/')
-        mark_path_new = mark_path.replace('images/','processed/')
-        #move to processed
-        shutil.move(image_path, image_path_new)
-        shutil.move(mark_path, mark_path_new)
-        
-        if USE_AWS:
-            with open(mark_path_new) as data:
-                s3.Bucket(bucket_name).put_object(Key=mark_path_new, Body=data)
-            with open(image_path_new) as data:
-                s3.Bucket(bucket_name).put_object(Key=image_path_new, Body=data)
+        #recived markup
+        mark_path = dict['imageName'].replace("images", "processed").replace('.jpg','.json')
+        s3.Bucket(bucket_name).put_object(Key=mark_path, Body=data)
+        #move image
+        old_location = dict['imageName']
+        new_location = dict['imageName'].replace("images", "processed")
+        s3.Object(bucket_name, new_location).copy_from(CopySource=bucket_name+'/' + old_location)
+        s3.Object(bucket_name, old_location).delete()
 
         return "ok"
     else:
