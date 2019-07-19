@@ -8,8 +8,6 @@ import shutil
 import random
 import logging
 
-#logging.basicConfig(level=logging.INFO)
-
 import boto3
 s3 = boto3.resource('s3')
 s3_client  = boto3.client('s3')
@@ -85,12 +83,13 @@ def savePost(application):
         directory=os.path.dirname(os.path.realpath(__file__))
 
         #recived markup
-        mark_path = dict['imageName'].replace("images", "processed").replace('.jpg','.json')
+        image_path = dict['imageName'][len(application)+2:]
+        mark_path = image_path.replace("images", "processed").replace('.jpg','.json')
         logging.info("Saving markup to " + mark_path)
         s3.Bucket(bucket_name).put_object(Key=mark_path, Body=data)
         #move image
-        old_location = dict['imageName']
-        new_location = dict['imageName'].replace("images", "processed")
+        old_location = image_path
+        new_location = image_path.replace("images", "processed")
         logging.info("Moving image from {} to {}".format(old_location, new_location))
         s3.Object(bucket_name, new_location).copy_from(CopySource=bucket_name+'/' + old_location)
         s3.Object(bucket_name, old_location).delete()
