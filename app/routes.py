@@ -62,7 +62,7 @@ def get_random_pic_name(application):
     else:
         index=random.randint(0,len(elements)-1)
         print("send , ", elements[index])
-        return elements[index]
+        return "/"+application+"/"+ elements[index]
 
 
 @app.route('/save/<string:application>',methods=['POST'])
