@@ -25,8 +25,6 @@ config=json.load(f)
 f.close()
 
 
-width=600
-height=600
 
 @app.route('/')
 def index():
@@ -38,6 +36,8 @@ def index():
 def markup(application):
     logging.info('Visited /markup/'+application)
     if application in config['applications']:
+        width=config[application]['width']
+        height=config[application]['height']
         return render_template(application+'.html',width=width,height=height)
     else:
         return "no such application"

@@ -1,3 +1,4 @@
 {
-	"applications": ["bus","one_rect","three_rects","one_point"]
+	"applications": ["bus","one_rect","three_rects","one_point"],
+	"bus":{"width":960,"height":540}
 }
