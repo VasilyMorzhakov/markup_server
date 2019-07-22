@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>One rectangle</title>
+    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+
+</head>
+<body>
+<p>Legend: "c" - clear, "s" - skip, "space" - save and next</p>
+
+<canvas id="canvas" width="{{width}}" height="{{height}}"></canvas>
+
+
+    <script >
+
+    type="adult";
+    imageName="";
+
+    function httpGet(theUrl)
+    {
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.open( "GET", theUrl, false ); // false for synchronous request
+        xmlHttp.send( null );
+        return xmlHttp.responseText;
+    }
+
+    function httpPost(theUrl,str)
+    {
+        var client = new XMLHttpRequest();
+        var xmlHttp = new XMLHttpRequest();
+        client.open( "POST", theUrl, true ); // false for synchronous request
+        client.setRequestHeader("Content-Type", "application/json");
+        client.send(str);
+    }
+    var canvas = document.getElementById('canvas');
+    ctx = canvas.getContext('2d');
+    rects = new Array();
+    types=new Array();
+    drag=false;
+
+    var imageObj = new Image();
+
+    function init() {
+      canvas.addEventListener('mousedown', mouseDown, false);
+      canvas.addEventListener('mouseup', mouseUp, false);
+      canvas.addEventListener('mousemove', mouseMove, false);
+    }
+
+    function mouseDown(e) {
+      rects.length=0;
+      rect={};
+      rect.startX = e.pageX - this.offsetLeft;
+      rect.startY = e.pageY - this.offsetTop;
+      rect.w=1;
+      rect.h=1;
+      rects.push(rect);
+      drag = true;
+    }
+
+    function mouseUp() {
+      drag = false;
+
+
+    }
+    function draw(rects)
+    {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(imageObj, 0, 0);
+
+
+
+        for(var i=0;i<rects.length;i++)
+        {
+            ctx.beginPath();
+            ctx.lineWidth=6;
+            ctx.font = "20px Arial";
+
+            ctx.strokeStyle = 'red';
+            ctx.fillStyle = 'red';
+
+
+            ctx.rect(rects[i].startX,rects[i].startY, rects[i].w, rects[i].h);
+            ctx.stroke();
+        }
+
+
+    }
+    function mouseMove(e) {
+      if (drag) {
+        rects[rects.length-1].w=(e.pageX - this.offsetLeft) - rects[rects.length-1].startX;
+        rects[rects.length-1].h=(e.pageY - this.offsetTop) - rects[rects.length-1].startY;
+        draw(rects);
+      }
+    }
+    function saveAndNext(imageName,rects,types)
+    {
+        res={};
+        res.imageName=imageName;
+        res.rects=rects;
+        res.types=types;
+        str=JSON.stringify(res);
+
+        httpPost('/save/one_rect',str);
+    }
+
+    document.onkeydown = function(evt) {
+        evt = evt || window.event;
+
+        if (evt.keyCode==67)  //C
+        {
+            rects.length=0;
+            draw(rects,types,type);
+        }
+        if (evt.keyCode==83)  //S
+        {
+            document.location.reload(true);
+        }
+        if (evt.keyCode==32)
+        {
+            saveAndNext(imageName,rects,types);
+            document.location.reload(true);
+        }
+    };
+
+    init();
+
+      var canvas = document.getElementById('canvas');
+      var context = canvas.getContext('2d');
+
+
+
+      imageObj.onload = function()
+      {
+        draw(rects);
+      };
+      imageName= httpGet('/one_rect/get_random_pic_name');
+      imageObj.src =imageName;
+    </script>
+  </body>
+
+</body>
+</html>
