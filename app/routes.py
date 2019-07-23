@@ -7,7 +7,7 @@ import os
 import shutil
 import random
 import logging
-
+import time
 import boto3
 s3 = boto3.resource('s3')
 s3_client  = boto3.client('s3')
@@ -19,6 +19,16 @@ config=json.load(f)
 f.close()
 
 
+def get_all_images(bucket):
+    paginator = s3_client.get_paginator('list_objects')
+    operation_parameters = {'Bucket': bucket,
+                        'Prefix': 'images/'}
+    page_iterator = paginator.paginate(**operation_parameters)
+    images = []
+    for page in page_iterator:
+        for item in page['Contents']:
+            images.append(item["Key"])
+    return images
 
 @app.route('/')
 def index():
