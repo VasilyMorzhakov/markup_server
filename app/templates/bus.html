@@ -32,6 +32,7 @@
         client.open( "POST", theUrl, true ); // false for synchronous request
         client.setRequestHeader("Content-Type", "application/json");
         client.send(str);
+        return xmlHttp.responseText;
     }
     var canvas = document.getElementById('canvas');
     ctx = canvas.getContext('2d');
@@ -113,7 +114,8 @@
         res.types=types;
         str=JSON.stringify(res);
 
-        httpPost('/save/bus',str);
+        console.log(httpPost('/save/bus',str));
+
     }
 
     document.onkeydown = function(evt) {

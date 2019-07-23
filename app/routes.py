@@ -81,13 +81,17 @@ def savePost(application):
         fn=dict['imageName']
 
 
-
-        fn_json=fn.replace('.jpg','.json')
-        directory=os.path.dirname(os.path.realpath(__file__))
-
         #recived markup
         image_path = dict['imageName'][len(application)+2:]
-        mark_path = image_path.replace("images", "processed").replace('.jpg','.json')
+
+        if image_path.endwith('.jpg'):
+            mark_path = image_path.replace("images", "processed").replace('.jpg','.json')
+        else:
+            if image_path.endwith('.png'):
+                mark_path = image_path.replace("images", "processed").replace('.png', '.json')
+            else:
+                return "wrong file format"
+
         logging.info("Saving markup to " + mark_path)
         s3.Bucket(bucket_name).put_object(Key=mark_path, Body=data)
         #move image
