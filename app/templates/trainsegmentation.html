@@ -16,7 +16,7 @@
 
     <script >
 
-    type="adult";
+    type="";
     imageName="";
     application="{{application}}";
 
@@ -37,15 +37,14 @@
         client.send(str);
         return xmlHttp.responseText;
     }
-    function getLegend()
-    {
-	return " z -adult, x - child, c - clear";
-    }
+    function getLegend(types)
+    {}
 
     var canvas = document.getElementById('canvas');
     ctx = canvas.getContext('2d');
     rects = new Array();
     types=new Array();
+    rects_types=new Array();
     drag=false;
 
     var imageObj = new Image();
@@ -63,7 +62,7 @@
       rect.w=1;
       rect.h=1;
       rects.push(rect);
-      types.push(type);
+      rects_types.push(type);
       drag = true;
     }
 
@@ -88,16 +87,10 @@
             ctx.beginPath();
             ctx.lineWidth=6;
             ctx.font = "20px Arial";
-            if(types[i].localeCompare("adult")==0)
-            {
-                ctx.strokeStyle = 'red';
-                ctx.fillStyle = 'red';
-            }
-            if(types[i].localeCompare("child")==0)
-            {
-                ctx.strokeStyle = 'green';
-                ctx.fillStyle = 'green';
-            }
+
+            ctx.strokeStyle = 'red';
+            ctx.fillStyle = 'red';
+            
 
 
             ctx.fillText(types[i],rects[i].startX+5,rects[i].startY+20);
@@ -111,7 +104,7 @@
       if (drag) {
         rects[rects.length-1].w=(e.pageX - this.offsetLeft) - rects[rects.length-1].startX;
         rects[rects.length-1].h=(e.pageY - this.offsetTop) - rects[rects.length-1].startY;
-        draw(rects,types,type);
+        draw(rects,rects_types,type);
       }
     }
     function saveAndNext(imageName,rects,types)
@@ -130,17 +123,17 @@
         evt = evt || window.event;
         if (evt.keyCode == 90) {  //Z
             type="adult";
-            draw(rects,types,type);
+            draw(rects,rects_types,type);
         }
         if (evt.keyCode == 88) {  //X
             type="child";
-            draw(rects,types,type);
+            draw(rects,rects_types,type);
         }
         if (evt.keyCode==67)  //C
         {
             rects.length=0;
             types.length=0;
-            draw(rects,types,type);
+            draw(rects,rects_types,type);
         }
         if (evt.keyCode==83)  //S
         {
@@ -160,16 +153,20 @@
 
 
 
-      imageObj.onload = function()
-      {
-        draw(rects,types,type);
-      };
+      
       imageName= httpGet('/'+application+'/get_random_pic_name');
-	console.log(imageName);
       imageObj.src =imageName;
-	
-	document.getElementById('legend').innerHTML=getLegend();
+
+	types=JSON.parse(httpGet('/'+application+'/get_config/types'));
+	type=types[0];
+	document.getElementById('legend').innerHTML=getLegend(types);
 	document.getElementById('images_left').innerHTML=httpGet('/'+application+'/get_left_images');
+
+	imageObj.onload = function()
+      {
+        draw(rects,rects_types,type);
+      };
+
     </script>
   </body>
 

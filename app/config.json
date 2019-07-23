@@ -1,5 +1,6 @@
 {
-	"applications": ["bus","onerect","threerects","onepoint"],
+	"applications": ["bus","onerect","trainsegmentation"],
 	"bus":{"width":960,"height":540},
-	"onerect": {"width": 448,"height": 336}
+	"onerect": {"width": 448,"height": 336},
+	"trainsegmentation": {"width": 448,"height": 336,"types":["platform number","coupler","cont_p1","cont_p2","cont_p3"]}
 }

@@ -12,12 +12,6 @@ import boto3
 s3 = boto3.resource('s3')
 s3_client  = boto3.client('s3')
 
-temp={}
-temp['applications']=[]
-temp['applications'].append('bus')
-temp['applications'].append('one_rect')
-temp['applications'].append('three_rect')
-temp['applications'].append('one_point')
 
 
 f=open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'config.json'),'r+')
@@ -38,7 +32,7 @@ def markup(application):
     if application in config['applications']:
         width=config[application]['width']
         height=config[application]['height']
-        return render_template(application+'.html',width=width,height=height)
+        return render_template(application+'.html',width=width,height=height,application=application)
     else:
         return "no such application"
 
@@ -52,16 +46,30 @@ def return_image(application,filename):
     data = response['Body']
     return send_file(data, attachment_filename=filename)
 
+@app.route('/<string:application>/get_left_images')
+def get_left_images(application):
+    bucket_name = application + ".markup"
+    logging.info('count left images = {}, bucket_name = {}'.format(application, bucket_name)) 
+    response = s3_client.list_objects_v2(Bucket=bucket_name,Prefix='images/')
+    elements = [c["Key"] for c in response['Contents']]
+    return str(len(elements))
+
+@app.route('/<string:application>/get_config/<string:field>')
+def get_config(application,field):
+    if application in config['applications']:
+        return json.dumps(config[application][field])
+    return None
+
+
 @app.route('/<string:application>/get_random_pic_name')
 def get_random_pic_name(application):
     bucket_name = application + ".markup"
     logging.info('Random pick with application = {}, bucket_name = {}'.format(application, bucket_name)) 
     #query all files and dirs
     #if error hapens, app crashes
-    response = s3_client.list_objects_v2(Bucket=bucket_name)
+    response = s3_client.list_objects_v2(Bucket=bucket_name,Prefix='images/')
     elements = [c["Key"] for c in response['Contents']]
-    print(elements)
-    elements = [e for e in elements if e.startswith("images") and (e.endswith(".jpg") or e.endswith(".png"))]
+    elements = [e for e in elements if (e.endswith(".jpg") or e.endswith(".png"))]
     if len(elements) == 0:
         return None #"/"+application+"/images/fail"
     else:
@@ -83,11 +91,10 @@ def savePost(application):
 
         #recived markup
         image_path = dict['imageName'][len(application)+2:]
-
-        if image_path.endwith('.jpg'):
+        if image_path.endswith('.jpg'):
             mark_path = image_path.replace("images", "processed").replace('.jpg','.json')
         else:
-            if image_path.endwith('.png'):
+            if image_path.endswith('.png'):
                 mark_path = image_path.replace("images", "processed").replace('.png', '.json')
             else:
                 return "wrong file format"
