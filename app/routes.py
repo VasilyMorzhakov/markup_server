@@ -61,7 +61,7 @@ def get_random_pic_name(application):
     response = s3_client.list_objects_v2(Bucket=bucket_name)
     elements = [c["Key"] for c in response['Contents']]
     print(elements)
-    elements = [e for e in elements if e.startswith("images") and e.endswith(".jpg")]
+    elements = [e for e in elements if e.startswith("images") and (e.endswith(".jpg") or e.endswith(".png"))]
     if len(elements) == 0:
         return None #"/"+application+"/images/fail"
     else:
@@ -79,6 +79,9 @@ def savePost(application):
 
         dict=json.loads(data.decode())
         fn=dict['imageName']
+
+
+
         fn_json=fn.replace('.jpg','.json')
         directory=os.path.dirname(os.path.realpath(__file__))
 
