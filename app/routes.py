@@ -49,7 +49,7 @@ def markup(application):
 @app.route('/<string:application>/images/<path:filename>')
 def return_image(application,filename):
     logging.info('Returning image with application = {}, filename = {}'.format(application, filename))
-    bucket_name = application + ".markup"
+    bucket_name = config[application]['bucket']
     file_key = "images/" + filename
     logging.info('Use bucket_name = {}, and file_key = {}'.format(bucket_name, file_key))
     response = s3_client.get_object(Bucket=bucket_name, Key=file_key)
@@ -58,7 +58,7 @@ def return_image(application,filename):
 
 @app.route('/<string:application>/get_left_images')
 def get_left_images(application):
-    bucket_name = application + ".markup"
+    bucket_name = config[application]['bucket']
     logging.info('count left images = {}, bucket_name = {}'.format(application, bucket_name)) 
     response = s3_client.list_objects_v2(Bucket=bucket_name,Prefix='images/')
     elements = [c["Key"] for c in response['Contents']]
@@ -73,7 +73,7 @@ def get_config(application,field):
 
 @app.route('/<string:application>/get_random_pic_name')
 def get_random_pic_name(application):
-    bucket_name = application + ".markup"
+    bucket_name = config[application]['bucket']
     logging.info('Random pick with application = {}, bucket_name = {}'.format(application, bucket_name)) 
     #query all files and dirs
     #if error hapens, app crashes
@@ -90,7 +90,7 @@ def get_random_pic_name(application):
 
 @app.route('/save/<string:application>',methods=['POST'])
 def savePost(application):
-    bucket_name = application + ".markup"
+    bucket_name = config[application]['bucket']
     logging.info('savePost, application = {}, bucket_name = {}'.format(application, bucket_name))
     if application in config['applications']:
         data = request.data
