@@ -38,7 +38,14 @@
         return xmlHttp.responseText;
     }
     function getLegend(types)
-    {}
+    {
+	var s="";
+	for(var i=0;i<types.length;i++)
+	{
+		s+=(i+1).toString()+" - "+types[i]+";  ";
+	}
+	return s;
+    }
 
     var canvas = document.getElementById('canvas');
     ctx = canvas.getContext('2d');
@@ -56,6 +63,7 @@
     }
 
     function mouseDown(e) {
+	rects.length=0;
       rect={}
       rect.startX = e.pageX - this.offsetLeft;
       rect.startY = e.pageY - this.offsetTop;
@@ -121,14 +129,13 @@
 
     document.onkeydown = function(evt) {
         evt = evt || window.event;
-        if (evt.keyCode == 90) {  //Z
-            type="adult";
-            draw(rects,rects_types,type);
-        }
-        if (evt.keyCode == 88) {  //X
-            type="child";
-            draw(rects,rects_types,type);
-        }
+	console.log(evt.keyCode);
+	if ((evt.keyCode>=49) &&(evt.keyCode<49+types.length))
+	{
+		type=types[evt.keyCode-49];
+		draw(rects,rects_types,type);
+
+	}
         if (evt.keyCode==67)  //C
         {
             rects.length=0;

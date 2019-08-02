@@ -19,16 +19,6 @@ config=json.load(f)
 f.close()
 
 
-def get_all_images(bucket):
-    paginator = s3_client.get_paginator('list_objects')
-    operation_parameters = {'Bucket': bucket,
-                        'Prefix': 'images/'}
-    page_iterator = paginator.paginate(**operation_parameters)
-    images = []
-    for page in page_iterator:
-        for item in page['Contents']:
-            images.append(item["Key"])
-    return images
 
 @app.route('/')
 def index():
@@ -50,7 +40,7 @@ def markup(application):
 def return_image(application,filename):
     logging.info('Returning image with application = {}, filename = {}'.format(application, filename))
     bucket_name = config[application]['bucket']
-    file_key = "images/" + filename
+    file_key = config[application]['input']+"/" + filename
     logging.info('Use bucket_name = {}, and file_key = {}'.format(bucket_name, file_key))
     response = s3_client.get_object(Bucket=bucket_name, Key=file_key)
     data = response['Body']
@@ -60,7 +50,7 @@ def return_image(application,filename):
 def get_left_images(application):
     bucket_name = config[application]['bucket']
     logging.info('count left images = {}, bucket_name = {}'.format(application, bucket_name)) 
-    response = s3_client.list_objects_v2(Bucket=bucket_name,Prefix='images/')
+    response = s3_client.list_objects_v2(Bucket=bucket_name,Prefix=config[application]['input']+'/')
     elements = [c["Key"] for c in response['Contents']]
     return str(len(elements))
 
@@ -77,7 +67,7 @@ def get_random_pic_name(application):
     logging.info('Random pick with application = {}, bucket_name = {}'.format(application, bucket_name)) 
     #query all files and dirs
     #if error hapens, app crashes
-    response = s3_client.list_objects_v2(Bucket=bucket_name,Prefix='images/')
+    response = s3_client.list_objects_v2(Bucket=bucket_name,Prefix=config[application]['input']+'/')
     elements = [c["Key"] for c in response['Contents']]
     elements = [e for e in elements if (e.endswith(".jpg") or e.endswith(".png"))]
     if len(elements) == 0:
@@ -102,10 +92,10 @@ def savePost(application):
         #recived markup
         image_path = dict['imageName'][len(application)+2:]
         if image_path.endswith('.jpg'):
-            mark_path = image_path.replace("images", "processed").replace('.jpg','.json')
+            mark_path = image_path.replace(config[application]['input'], "processed").replace('.jpg','.json')
         else:
             if image_path.endswith('.png'):
-                mark_path = image_path.replace("images", "processed").replace('.png', '.json')
+                mark_path = image_path.replace(config[application]['input'], "processed").replace('.png', '.json')
             else:
                 return "wrong file format"
 
@@ -113,7 +103,7 @@ def savePost(application):
         s3.Bucket(bucket_name).put_object(Key=mark_path, Body=data)
         #move image
         old_location = image_path
-        new_location = image_path.replace("images", "processed")
+        new_location = image_path.replace(config[application]['input'], config[application]['output'])
         logging.info("Moving image from {} to {}".format(old_location, new_location))
         s3.Object(bucket_name, new_location).copy_from(CopySource=bucket_name+'/' + old_location)
         s3.Object(bucket_name, old_location).delete()
