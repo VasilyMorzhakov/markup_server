@@ -62,7 +62,9 @@ def upload_result_post(application):
         bucket_name = config[application]['bucket']
         files = request.files.getlist("files")
         if len(files)==2 and ('.jpg' in files[0].filename or '.png' in files[0].filename) and ('.json' in files[1].filename):
+            db.put_file(application,config[application]['input'],files[0].filename)
             s3.Bucket(bucket_name).put_object(Key=config[application]['input']+'/'+files[0].filename, Body=files[0].read())
+            db.put_file(application,config[application]['input'],files[1].filename)
             s3.Bucket(bucket_name).put_object(Key=config[application]['input']+'/'+files[1].filename, Body=files[1].read())
         return "ok"
     else:
