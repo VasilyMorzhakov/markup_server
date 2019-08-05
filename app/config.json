@@ -2,5 +2,6 @@
 	"applications": ["bus","onerect","trainsegmentation"],
 	"bus":{"width":1520,"height":1520,"bucket":"bus.markup","input":"images","output":"processed"},
 	"onerect": {"width": 448,"height": 336},
-	"trainsegmentation": {"width": 448,"height": 336,"types":["platform number","coupler","cont_p1","cont_p2","cont_p3"],"bucket":"trainsegmentation.markup","input":"images","output":"processed1"}
+	"tiles":{"width":448,"height":336,"bucket":"trainsegmentation.markup","input":"images","output":"processed1"},
+	"trainsegmentation": {"width": 448,"height": 336,"types":["platform number","coupler","cont_p1","cont_p2","cont_p3"],"bucket":"trainsegmentation.markup","input":"processed1","output":"processed2"}
 }
