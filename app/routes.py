@@ -9,6 +9,7 @@ import random
 import logging
 import time
 import boto3
+from app import db
 s3 = boto3.resource('s3')
 s3_client  = boto3.client('s3')
 
@@ -26,6 +27,49 @@ def index():
     return "This is a markup service"
 
 
+@app.route('/upload/<string:application>',methods=['GET'])
+def upload_get(application):
+    logging.info('Visited get /upload/'+application)
+    if application in config['applications']:
+        return render_template('uploadfiles.html',application=application)
+    else:
+        return "no such application"
+
+@app.route('/upload/<string:application>',methods=['POST'])
+def upload_post(application):
+    logging.info('Visited post /upload/'+application)
+    
+    if application in config['applications']:
+      
+        bucket_name = config[application]['bucket']
+        files = request.files.getlist("files")
+        for file in files:
+
+            if '.jpg' in file.filename or '.png' in file.filename:
+
+                db.put_file(application,config[application]['input'],file.filename)
+                s3.Bucket(bucket_name).put_object(Key=config[application]['input']+'/'+file.filename, Body=file.read())
+
+        return "ok"
+    else:
+        return "no such application"
+
+@app.route('/upload_result/<string:application>',methods=['POST'])
+def upload_result_post(application):
+    logging.info('Visited post /upload_result/'+application)
+    
+    if application in config['applications']:
+        bucket_name = config[application]['bucket']
+        files = request.files.getlist("files")
+        if len(files)==2 and ('.jpg' in files[0].filename or '.png' in files[0].filename) and ('.json' in files[1].filename):
+            s3.Bucket(bucket_name).put_object(Key=config[application]['input']+'/'+files[0].filename, Body=files[0].read())
+            s3.Bucket(bucket_name).put_object(Key=config[application]['input']+'/'+files[1].filename, Body=files[1].read())
+        return "ok"
+    else:
+        return "no such application"
+
+
+
 @app.route('/markup/<string:application>')
 def markup(application):
     logging.info('Visited /markup/'+application)
@@ -35,6 +79,7 @@ def markup(application):
         return render_template(application+'.html',width=width,height=height,application=application)
     else:
         return "no such application"
+
 
 @app.route('/<string:application>/images/<path:filename>')
 def return_image(application,filename):
@@ -80,9 +125,10 @@ def get_random_pic_name(application):
 
 @app.route('/save/<string:application>',methods=['POST'])
 def savePost(application):
-    bucket_name = config[application]['bucket']
+    
     logging.info('savePost, application = {}, bucket_name = {}'.format(application, bucket_name))
     if application in config['applications']:
+        bucket_name = config[application]['bucket']
         data = request.data
 
         dict=json.loads(data.decode())
@@ -92,10 +138,10 @@ def savePost(application):
         #recived markup
         image_path = dict['imageName'][len(application)+2:]
         if image_path.endswith('.jpg'):
-            mark_path = image_path.replace(config[application]['input'], "processed").replace('.jpg','.json')
+            mark_path = image_path.replace('images', config[application]['output']).replace('.jpg','.json')
         else:
             if image_path.endswith('.png'):
-                mark_path = image_path.replace(config[application]['input'], "processed").replace('.png', '.json')
+                mark_path = image_path.replace('images', config[application]['output']).replace('.png', '.json')
             else:
                 return "wrong file format"
 
