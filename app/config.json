@@ -1,5 +1,5 @@
 {
-	"applications": ["bus","onerect","trainsegmentation"],
+	"applications": ["bus","onerect","trainsegmentation","container"],
 	"bus":{"width":1520,"height":1520,"bucket":"bus.markup","input":"images","output":"processed"},
 	"onerect": {"width": 448,"height": 336},
 	"tiles":{"width":448,"height":336,"bucket":"trainsegmentation.markup","input":"images","output":"processed1"},
