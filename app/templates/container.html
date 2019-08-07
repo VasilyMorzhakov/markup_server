@@ -63,7 +63,6 @@
     }
 
     function mouseDown(e) {
-
       rect={}
       rect.startX = e.pageX - this.offsetLeft;
       rect.startY = e.pageY - this.offsetTop;
@@ -146,7 +145,7 @@
         {
             document.location.reload(true);
         }
-        if (evt.keyCode==32)
+        if (evt.keyCode==32)//space
         {
             saveAndNext(imageName,rects,types);
             document.location.reload(true);
