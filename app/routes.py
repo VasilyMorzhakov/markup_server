@@ -102,7 +102,7 @@ def get_left_images(application):
     if application in config['applications']:
         folder=config[application]['input']
         files=db.get_files(application,folder)
-        images=[e for e in files if (e['filename'].endswith('.jpg') or e['filename'].endswith('.jpg'))]
+        images=[e for e in files if (e['filename'].endswith('.jpg') or e['filename'].endswith('.png'))]
         return str(len(images))
     else:
         return None
@@ -121,7 +121,7 @@ def get_random_pic_name(application):
         start=time.time()
         folder=config[application]['input']
         files=db.get_files(application,folder)
-        images=[e for e in files if (e['filename'].endswith('.jpg') or e['filename'].endswith('.jpg'))]
+        images=[e for e in files if (e['filename'].endswith('.jpg') or e['filename'].endswith('.png'))]
         index=random.randint(0,len(images)-1)
         res='/'+application+'/'+images[index]['folder']+'/'+images[index]['filename']
         #print('dt ',time.time()-start)
