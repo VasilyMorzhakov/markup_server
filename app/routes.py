@@ -91,7 +91,12 @@ def return_image(application,filename):
         bucket_name = config[application]['bucket']
         file_key = config[application]['input']+"/" + filename
         logging.info('Use bucket_name = {}, and file_key = {}'.format(bucket_name, file_key))
-        response = s3_client.get_object(Bucket=bucket_name, Key=file_key)
+        try:
+            response = s3_client.get_object(Bucket=bucket_name, Key=file_key)
+        except botocore.exceptions.ClientError as e: 
+            db.delete_file(application,config[application]['input'],filename)
+            return None
+
         data = response['Body']
         return send_file(data, attachment_filename=filename)  
     else:
@@ -175,12 +180,19 @@ def savePost(application):
 
         logging.info("Saving markup to " + mark_path)
         s3.Bucket(bucket_name).put_object(Key=mark_path, Body=data)
+        db.put_file(application,config[application]['output'],os.path.basename(mark_path))
+
         #move image
         old_location = image_path
         new_location = image_path.replace(config[application]['input'], config[application]['output'])
         logging.info("Moving image from {} to {}".format(old_location, new_location))
         s3.Object(bucket_name, new_location).copy_from(CopySource=bucket_name+'/' + old_location)
+        db.put_file(application,config[application]['output'],os.path.basename(new_location))
+
         s3.Object(bucket_name, old_location).delete()
+        db.delete_file(application,config[application]['input'],os.path.basename(old_location))
+        db.delete_file(application,config[application]['input'],os.path.basename(mark_path))
+
 
         return "ok"
     else:

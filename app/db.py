@@ -14,6 +14,9 @@ def get_files(application,folder):
         res.append(document)
     return res
 
+def delete_file(application,folder,file):
+    client[application].files.delete_one({'folder':folder,'filename':file})
+
 def put_file(application,folder,file):
     client[application].files.insert_one({'folder':folder,'filename':file})
 
