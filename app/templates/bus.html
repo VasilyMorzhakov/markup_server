@@ -17,6 +17,7 @@
     <script >
 
     type="adult";
+    chosen_index=-1;
     imageName="";
     application="{{application}}";
 
@@ -57,14 +58,32 @@
     }
 
     function mouseDown(e) {
-      rect={}
-      rect.startX = e.pageX - this.offsetLeft;
-      rect.startY = e.pageY - this.offsetTop;
-      rect.w=1;
-      rect.h=1;
-      rects.push(rect);
-      types.push(type);
-      drag = true;
+      var was=0;
+      for(var i=0;i<rects.length;i++)
+      {
+          if((Math.abs(e.pageX - this.offsetLeft-rects[i].startX)<30)&&(Math.abs(e.pageY - this.offsetTop-rects[i].startY)<30))
+	  {
+              if(chosen_index==i)
+              	chosen_index=-1;
+              else
+		chosen_index=i;
+              was=1;
+          }
+      }
+      if(was==0)
+      {
+      	rect={}
+	rect.startX = e.pageX - this.offsetLeft;
+        rect.startY = e.pageY - this.offsetTop;
+        rect.w=1;
+        rect.h=1;
+        rects.push(rect);
+        types.push(type);
+        drag = true;
+      }else
+      {  
+	draw(rects,types,type,chosen_index);
+      }
     }
 
     function mouseUp() {
@@ -72,8 +91,10 @@
 
 
     }
-    function draw(rects,types,type)
+    function draw(rects,types,type,chosen_index)
     {
+ 	
+ 	
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(imageObj, 0, 0);
         ctx.beginPath();
@@ -99,10 +120,18 @@
                 ctx.fillStyle = 'green';
             }
 
+	    if(i==chosen_index)
+            {
+                ctx.strokeStyle = 'orange';
+                ctx.fillStyle = 'orange';
+
+            }
+
 
             ctx.fillText(types[i],rects[i].startX+5,rects[i].startY+20);
             ctx.rect(rects[i].startX,rects[i].startY, rects[i].w, rects[i].h);
             ctx.stroke();
+		
         }
 
 
@@ -111,7 +140,7 @@
       if (drag) {
         rects[rects.length-1].w=(e.pageX - this.offsetLeft) - rects[rects.length-1].startX;
         rects[rects.length-1].h=(e.pageY - this.offsetTop) - rects[rects.length-1].startY;
-        draw(rects,types,type);
+        draw(rects,types,type,chosen_index);
       }
     }
     function saveAndNext(imageName,rects,types)
@@ -130,27 +159,40 @@
         evt = evt || window.event;
         if (evt.keyCode == 90) {  //Z
             type="adult";
-            draw(rects,types,type);
+            draw(rects,types,type,chosen_index);
         }
         if (evt.keyCode == 88) {  //X
             type="child";
-            draw(rects,types,type);
+            draw(rects,types,type,chosen_index);
         }
         if (evt.keyCode==67)  //C
         {
             rects.length=0;
             types.length=0;
-            draw(rects,types,type);
+            draw(rects,types,type,chosen_index);
         }
         if (evt.keyCode==83)  //S
         {
             document.location.reload(true);
         }
-        if (evt.keyCode==32)
+        if (evt.keyCode==32)//space
         {
             saveAndNext(imageName,rects,types);
             document.location.reload(true);
         }
+	if (evt.keyCode==68)//D
+	{
+		if(chosen_index>=0)
+		{	
+			console.log(chosen_index);
+			console.log(rects[chosen_index]);
+			rects.splice(chosen_index,1);
+			types.splice(chosen_index,1);
+			chosen_index=-1;
+			draw(rects,types,type,chosen_index);
+
+		}
+	}
     };
 
     init();
@@ -162,15 +204,35 @@
 
       imageObj.onload = function()
       {
-        draw(rects,types,type);
+        draw(rects,types,type,chosen_index);
+        
       };
+
+      
+
       imageName= httpGet('/'+application+'/get_random_pic_name');
-	console.log(imageName);
+
+      fn=imageName.split('/')[3];
+      folder=imageName.split('/')[2];
+
+      var json_res=httpGet('/'+application+'/get_json/'+folder+'/'+fn);
+      var json_parsed=JSON.parse(json_res);
+      if(json_parsed["rects"]!=undefined)
+      {
+
+        rects=json_parsed["rects"];
+        types=json_parsed["types"];
+	
+        
+
+      }
+
       imageObj.src =imageName;
 	
 	document.getElementById('legend').innerHTML=getLegend();
 	document.getElementById('images_left').innerHTML=httpGet('/'+application+'/get_left_images');
-    </script>
+
+       </script>
   </body>
 
 </body>
