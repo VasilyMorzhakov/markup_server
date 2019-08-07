@@ -9,6 +9,7 @@ import random
 import logging
 import time
 import boto3
+import botocore
 from app import db
 s3 = boto3.resource('s3')
 s3_client  = boto3.client('s3')
@@ -85,21 +86,26 @@ def markup(application):
 
 @app.route('/<string:application>/images/<path:filename>')
 def return_image(application,filename):
-    logging.info('Returning image with application = {}, filename = {}'.format(application, filename))
-    bucket_name = config[application]['bucket']
-    file_key = config[application]['input']+"/" + filename
-    logging.info('Use bucket_name = {}, and file_key = {}'.format(bucket_name, file_key))
-    response = s3_client.get_object(Bucket=bucket_name, Key=file_key)
-    data = response['Body']
-    return send_file(data, attachment_filename=filename)
+    if application in config['applications']:
+        logging.info('Returning image with application = {}, filename = {}'.format(application, filename))
+        bucket_name = config[application]['bucket']
+        file_key = config[application]['input']+"/" + filename
+        logging.info('Use bucket_name = {}, and file_key = {}'.format(bucket_name, file_key))
+        response = s3_client.get_object(Bucket=bucket_name, Key=file_key)
+        data = response['Body']
+        return send_file(data, attachment_filename=filename)  
+    else:
+        return None
 
 @app.route('/<string:application>/get_left_images')
 def get_left_images(application):
-    bucket_name = config[application]['bucket']
-    logging.info('count left images = {}, bucket_name = {}'.format(application, bucket_name)) 
-    response = s3_client.list_objects_v2(Bucket=bucket_name,Prefix=config[application]['input']+'/')
-    elements = [c["Key"] for c in response['Contents']]
-    return str(len(elements))
+    if application in config['applications']:
+        folder=config[application]['input']
+        files=db.get_files(application,folder)
+        images=[e for e in files if (e['filename'].endswith('.jpg') or e['filename'].endswith('.jpg'))]
+        return str(len(images))
+    else:
+        return None
 
 @app.route('/<string:application>/get_config/<string:field>')
 def get_config(application,field):
@@ -110,19 +116,39 @@ def get_config(application,field):
 
 @app.route('/<string:application>/get_random_pic_name')
 def get_random_pic_name(application):
-    bucket_name = config[application]['bucket']
-    logging.info('Random pick with application = {}, bucket_name = {}'.format(application, bucket_name)) 
-    #query all files and dirs
-    #if error hapens, app crashes
-    response = s3_client.list_objects_v2(Bucket=bucket_name,Prefix=config[application]['input']+'/')
-    elements = [c["Key"] for c in response['Contents']]
-    elements = [e for e in elements if (e.endswith(".jpg") or e.endswith(".png"))]
-    if len(elements) == 0:
-        return None #"/"+application+"/images/fail"
+
+    if application in config['applications']:
+        start=time.time()
+        folder=config[application]['input']
+        files=db.get_files(application,folder)
+        images=[e for e in files if (e['filename'].endswith('.jpg') or e['filename'].endswith('.jpg'))]
+        index=random.randint(0,len(images)-1)
+        res='/'+application+'/'+images[index]['folder']+'/'+images[index]['filename']
+        #print('dt ',time.time()-start)
+        return res
     else:
-        index=random.randint(0,len(elements)-1)
-        logging.info('    return: ' + "/"+application+"/"+ elements[index])
-        return "/"+application+"/"+ elements[index]
+        return None
+
+@app.route('/<string:application>/get_json/<string:folder>/<string:image_filename>')
+def get_json(application,folder,image_filename):
+
+    if application in config['applications']:
+        start=time.time()
+        bucket_name = config[application]['bucket']
+        logging.info('get json, app  = {}, bucket_name = {}, filename={}'.format(application, bucket_name,image_filename)) 
+        file_key=folder+'/'+image_filename.split('.')[0]+'.json'
+        try:
+
+            response=s3_client.get_object(Bucket=bucket_name, Key=file_key)
+            str = response['Body'].read().decode('utf-8') 
+            #print(time.time()-start)
+            return str
+        except botocore.exceptions.ClientError as e: 
+            return '{}'
+        return '{}'
+    else:
+        return '{}'
+
 
 
 @app.route('/save/<string:application>',methods=['POST'])
