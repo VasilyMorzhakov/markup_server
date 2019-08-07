@@ -159,9 +159,10 @@ def get_json(application,folder,image_filename):
 @app.route('/save/<string:application>',methods=['POST'])
 def savePost(application):
     
-    logging.info('savePost, application = {}, bucket_name = {}'.format(application, bucket_name))
+
     if application in config['applications']:
         bucket_name = config[application]['bucket']
+        logging.info('savePost, application = {}, bucket_name = {}'.format(application, bucket_name))
         data = request.data
 
         dict=json.loads(data.decode())
