@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Select a user</title>
+    {% include "header.html" %}
+</head>
+<body>
+
+{% include "nav_bar.html" %}
+
+<div class="description">
+
+<p>Select a user to review:</p>
+
+<form action="/review/{{application}}" method="post" id="form">
+<select name="select_user"">
+    {% for user in users %}
+    <option value= "{{user}}" {%if user == cur_user%} selected{%endif%}>{{user}}</option>"
+    {% endfor %}
+</select>
+<input type="submit" value ="Review"/>
+</form>
+<p>Current user to review: {{cur_user}} <p>
+<p>marked files: {{files|length}}</p>
+<p><a href="/review/del_all_samples_for_user/{{application}}/{{output}}" onclick="return confirm('Are you sure you would like to delete all processed samples of a chosen user?')">Delete them all for the user</a></p>
+
+<table border="1">
+  <thead>
+    <th>file</th>
+    <th> click to show </th>
+    <th> click to delete </th>
+  </thead>
+<tbody>
+{% for fn in files %}
+  <tr>
+  <td>{{fn}}</td>
+  <td><a href="/review/{{application}}/{{output}}/{{fn.split('.')[0]}}">show</a> </td>
+  <td><a href="/review/del_sample/{{application}}/{{output}}/{{fn.split('.')[0]}}">delete</a></td>
+  </tr>
+{% endfor %}
+</tbody>
+</table> 
+</div>
+</body>
+</html>

@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+    <title>Input samples</title>
+    {% include "header.html" %}
+</head>
+<body>
+{% include "nav_bar.html" %}
+
+<p>Input samples</p>
+<p>Choose month:</p>
+   <form action="/input/{{application}}" method="post" id="form">
+   <input type="month" id="month" name="month" value="{{cur_month}}">
+   <input type="submit" value ="Show"/>
+   </form>
+<br>
+<table border="1">
+  <thead>
+    <th> day </th>
+    <th> samples </th>
+    <th> click to delete </th>
+  </thead>
+<tbody>
+{% for day in day_by_day %}
+  <tr>
+  <td>{{day['date']}}</td>
+  <td>{{day['count']}}</td>
+  <td><a href="/input/del_day/{{application}}/{{input}}/{{day['date']}}">delete</a></td>
+  </tr>
+{% endfor %}
+</tbody>
+</table> 
+
+
+</body>

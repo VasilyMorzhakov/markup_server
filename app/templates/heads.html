@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Markup heads</title>
+    {% include "header.html" %}
+</head>
+<body>
+
+{% include "nav_bar.html" %}
+
+<div class="description" id="description">
+<div class="container">
+{% if review %}<h4>Review page</h4>{%endif%}
+<p >Legend: <label id="legend">Legend text</label></p>
+<p> space - save and next, s - skip</p>
+<p>images left: <lable id ="images_left">0</label><p>
+
+<canvas id="canvas" width="{{width}}" height="{{height}}"></canvas>
+
+
+    <script >
+
+    type="adult";
+    chosen_index=-1;
+    imageName="";
+    application="{{application}}";
+
+    function httpGet(theUrl)
+    {
+        var xmlHttp = new XMLHttpRequest();
+        xmlHttp.open( "GET", theUrl, false ); // false for synchronous request
+        xmlHttp.send( null );
+        return xmlHttp.responseText;
+    }
+
+    function httpPost(theUrl,str)
+    {
+        var client = new XMLHttpRequest();
+        var xmlHttp = new XMLHttpRequest();
+        client.open( "POST", theUrl, true ); // false for synchronous request
+        client.setRequestHeader("Content-Type", "application/json");
+        client.send(str);
+        return xmlHttp.responseText;
+    }
+    function getLegend(types)
+    {
+	var s="";
+	for(var i=0;i<types.length;i++)
+	{
+		s+=(i+1).toString()+" - "+types[i]+";  ";
+	}
+	return s;
+    }
+
+    var canvas = document.getElementById('canvas');
+    ctx = canvas.getContext('2d');
+    rects = new Array();
+    types=new Array();
+    rects_types=new Array();
+    drag=false;
+
+    var imageObj = new Image();
+
+    function init() {
+      canvas.addEventListener('mousedown', mouseDown, false);
+      canvas.addEventListener('mouseup', mouseUp, false);
+      canvas.addEventListener('mousemove', mouseMove, false);
+    }
+
+    function mouseDown(e) {
+      var was=0;
+     let reference = canvas.offsetParent;
+     shiftX=canvas.offsetLeft +reference.offsetLeft ;
+     shiftY=canvas.offsetTop +reference.offsetTop;
+
+      for(var i=0;i<rects.length;i++)
+      {
+          
+
+          if((Math.abs(e.pageX - shiftX-rects[i].startX)<30)&&(Math.abs(e.pageY - shiftY-rects[i].startY)<30))
+	  {
+              if(chosen_index==i)
+              	chosen_index=-1;
+              else
+		chosen_index=i;
+              was=1;
+          }
+      }
+      if(was==0)
+      {
+      	rect={}
+	rect.startX = e.pageX - shiftX;
+        rect.startY = e.pageY - shiftY;
+        rect.w=1;
+        rect.h=1;
+        rects.push(rect);
+        rects_types.push(type);
+        drag = true;
+      }else
+      {  
+	draw(rects,rects_types,type,chosen_index);
+      }
+    }
+
+    function mouseUp() {
+      drag = false;
+      if(rects.length>0)
+      {
+          if(((rects[rects.length-1].w<10)&&(rects[rects.length-1].h<10))||
+             ((rects[rects.length-1].w<0)||(rects[rects.length-1].h<0)))
+          {
+              rects.splice(rects.length-1,1);
+              rects_types.splice(rects.length-1,1);
+
+          }
+      }
+      draw(rects,rects_types,type,chosen_index);
+
+
+
+
+    }
+    function draw(rects,rects_types,type,chosen_index)
+    {
+ 	
+ 	
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+        ctx.drawImage(imageObj, 0, 0);
+        ctx.beginPath();
+        ctx.font = "30px Arial";
+        ctx.fillStyle = 'green';
+        ctx.fillText(type,30,50);
+        ctx.stroke();
+
+
+        for(var i=0;i<rects.length;i++)
+        {
+            ctx.beginPath();
+            ctx.lineWidth=6;
+            ctx.font = "20px Arial";
+            if(rects_types[i].localeCompare("adult")==0)
+            {
+                ctx.strokeStyle = 'red';
+                ctx.fillStyle = 'red';
+            }
+            if(rects_types[i].localeCompare("child")==0)
+            {
+                ctx.strokeStyle = 'yellow';
+                ctx.fillStyle = 'yellow';
+            }
+            if(rects_types[i].localeCompare("hidden")==0)
+            {
+                ctx.strokeStyle = 'blue';
+                ctx.fillStyle = 'blue';
+            }
+
+
+	    if(i==chosen_index)
+            {
+                ctx.strokeStyle = 'orange';
+                ctx.fillStyle = 'orange';
+
+            }
+
+
+            ctx.fillText(rects_types[i],rects[i].startX+5,rects[i].startY+20);
+            ctx.rect(rects[i].startX,rects[i].startY, rects[i].w, rects[i].h);
+            ctx.stroke();
+		
+        }
+
+
+    }
+    function mouseMove(e) {
+      if (drag) {
+        let reference = canvas.offsetParent;
+        shiftX=canvas.offsetLeft +reference.offsetLeft ;
+        shiftY=canvas.offsetTop +reference.offsetTop;
+
+        rects[rects.length-1].w= (e.pageX - shiftX) - rects[rects.length-1].startX;
+        rects[rects.length-1].h= (e.pageY - shiftY) - rects[rects.length-1].startY;
+        draw(rects,rects_types,type,chosen_index);
+      }
+    }
+    function saveAndNext(imageName,rects,rects_types)
+    {
+        res={};
+        res.imageName=imageName;
+        res.rects=rects;
+        res.types=rects_types;
+        str=JSON.stringify(res);
+
+        console.log(httpPost('/save/'+application,str));
+
+    }
+
+    document.onkeydown = function(evt) {
+        if (window.event)
+            keyCode = window.event.keyCode; // IE
+        else
+            keyCode = evt.which;  // Firefox
+        //evt = evt || window.event;
+        
+        if ((keyCode>=49) &&(keyCode<49+types.length))
+	{
+		type=types[keyCode-49];
+		draw(rects,rects_types,type,chosen_index);
+	}
+        if (keyCode==67)  //C
+        {
+            rects.length=0;
+            rects_types.length=0;
+            draw(rects,rects_types,type,chosen_index);
+        }
+        if ((keyCode==32))  //S
+        {
+            saveAndNext(imageName,rects,rects_types);
+            {% if review %}
+            document.location.href="/review/{{application}}"
+            {%else%}
+            document.location.reload(true);
+            {%endif%}
+
+        }
+        if(keyCode==83)
+        {
+            {% if review %}
+            document.location.href="/review/{{application}}"
+            {%else%}
+            document.location.reload(true);
+            {%endif%}
+
+        }
+        //if (evt.keyCode==32)//space
+        //{
+        //    saveAndNext(imageName,rects,rects_types);
+        //    document.location.reload(true);
+        //}
+	if (keyCode==68)//D
+	{
+		if(chosen_index>=0)
+		{	
+			console.log(chosen_index);
+			console.log(rects[chosen_index]);
+			rects.splice(chosen_index,1);
+			rects_types.splice(chosen_index,1);
+			chosen_index=-1;
+			draw(rects,rects_types,type,chosen_index);
+
+		}
+	}
+    };
+
+    init();
+
+      var canvas = document.getElementById('canvas');
+      var context = canvas.getContext('2d');
+
+
+
+      imageObj.onload = function()
+      {
+        draw(rects,rects_types,type,chosen_index);
+        
+      };
+
+      
+      {% if review %}
+
+      imageName="/{{application}}/get_file/{{folder}}/{{filename}}.{{image_ext}}"
+      fn="{{filename}}.{{image_ext}}"
+      folder="{{folder}}"
+
+      {%else%}
+
+      imageName= httpGet('/'+application+'/get_random_pic_name');
+      fn=imageName.split('/')[4];
+      folder=imageName.split('/')[3];
+
+      {% endif%}
+
+      var json_res=httpGet('/'+application+'/get_json/'+folder+'/'+fn);
+      var json_parsed=JSON.parse(json_res);
+      if(json_parsed["rects"]!=undefined)
+      {
+
+        rects=json_parsed["rects"];
+        rects_types=json_parsed["types"];
+	
+      }
+
+      imageObj.src =imageName;
+	types=JSON.parse(httpGet('/'+application+'/get_config/types'));
+        type=types[0];
+
+
+	document.getElementById('legend').innerHTML=getLegend(types);
+	document.getElementById('images_left').innerHTML=httpGet('/'+application+'/get_left_images');
+
+
+       </script>
+</div>
+</div>
+</body>
+</html>
