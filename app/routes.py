@@ -1,6 +1,6 @@
 from app import app
 from flask import render_template
-from flask import send_from_directory, send_file
+from flask import send_from_directory, send_file,url_for,redirect
 from flask import request
 import json
 import os
@@ -11,6 +11,10 @@ import time
 import boto3
 import botocore
 from app import db
+from app.forms import RegistrationForm
+from flask_login import login_user, logout_user, current_user, login_required,LoginManager,UserMixin
+
+
 s3 = boto3.resource('s3')
 s3_client  = boto3.client('s3')
 
@@ -20,19 +24,101 @@ f=open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'config.json'),'
 config=json.load(f)
 f.close()
 
+login_manager = LoginManager()
+login_manager.init_app(app)
 
+class User(UserMixin):
+    pass
+
+@login_manager.user_loader
+def user_loader(email):
+
+    user_dict=db.get_user(email)
+    if user_dict is None:
+        return
+
+    user = User()
+    user.id = user_dict['email']
+    user.name=user_dict['email']
+    return user
+
+
+@login_manager.request_loader
+def request_loader(request):
+    email = request.form.get('email')
+
+    user_dict=db.get_user(email)
+
+    if user_dict is None:
+        return
+
+    user = User()
+    user.id = user_dict['email']
+    user.name=user_dict['email']
+
+    user.is_authenticated = db.check_password(email,request.form['password'])
+
+    return user
 
 @app.route('/')
+@login_required
 def index():
     logging.info('Visited root')
-    return "This is a markup service"
+    return 'Logged in as: ' + current_user.id
 
+@app.route('/login', methods=['GET', 'POST'])
+def login():
+    if request.method == 'GET':
+        return '''
+               <form action='login' method='POST'>
+                <input type='text' name='email' id='email' placeholder='email'/>
+                <input type='password' name='password' id='password' placeholder='password'/>
+                <input type='submit' name='submit'/>
+               </form>
+               '''
+    email = request.form['email']
+
+    if db.check_password(email,request.form['password']):
+        user_dict=db.get_user(email)
+        user = User()
+        user.id = user_dict['email']
+        user.name= user_dict['email']
+
+        login_user(user)
+        return redirect('/')
+    return 'Bad login'
+
+@app.route('/logout')
+def logout():
+    logout_user()
+    return 'Logged out'
+@login_manager.unauthorized_handler
+def unauthorized_handler():
+    return redirect('/login')
+
+@app.route('/register/<string:role>/<string:token>', methods=['GET'])
+def register_get(role,token):
+    print('register ',role,token)
+    if db.check_pre_user(role,token):
+        form = RegistrationForm(role)
+        return render_template('register.html', title='Register', form=form)    
+    return "no such user"
+
+@app.route('/register/<string:role>/<string:token>', methods=['POST'])
+def register_post(role,token):
+    form = RegistrationForm(role)
+    if form.validate_on_submit():
+        db.add_user(form.username.data,form.email.data,form.password.data,form.role)
+        db.del_pre_user(role,token)
+        return redirect(url_for('login'))
+    return render_template('register.html', title='Register', form=form)
 
 @app.route('/upload/<string:application>',methods=['GET'])
+@login_required
 def upload_get(application):
     logging.info('Visited get /upload/'+application)
     if application in config['applications']:
-        return render_template('uploadfiles.html',application=application)
+        return render_template('uploadfiles.html',application=application,log_in_or_out='out')
     else:
         return "no such application"
 
@@ -74,33 +160,17 @@ def upload_result_post(application):
 
 
 @app.route('/markup/<string:application>')
+@login_required
 def markup(application):
     logging.info('Visited /markup/'+application)
     if application in config['applications']:
         width=config[application]['width']
         height=config[application]['height']
-        return render_template(application+'.html',width=width,height=height,application=application)
+        
+        return render_template(application+'.html',width=width,height=height,application=application,review=False,log_in_or_out="out")
     else:
         return "no such application"
 
-
-@app.route('/<string:application>/images/<path:filename>')
-def return_image(application,filename):
-    if application in config['applications']:
-        logging.info('Returning image with application = {}, filename = {}'.format(application, filename))
-        bucket_name = config[application]['bucket']
-        file_key = config[application]['input']+"/" + filename
-        logging.info('Use bucket_name = {}, and file_key = {}'.format(bucket_name, file_key))
-        try:
-            response = s3_client.get_object(Bucket=bucket_name, Key=file_key)
-        except botocore.exceptions.ClientError as e: 
-            db.delete_file(application,config[application]['input'],filename)
-            return None
-
-        data = response['Body']
-        return send_file(data, attachment_filename=filename)  
-    else:
-        return None
 
 @app.route('/<string:application>/get_left_images')
 def get_left_images(application):
@@ -118,8 +188,39 @@ def get_config(application,field):
         return json.dumps(config[application][field])
     return None
 
+@app.route('/<string:application>/get_file_names/<string:folder>')
+def get_file_names(application,folder):
+
+    if application in config['applications']:
+        files=db.get_files(application,folder)
+        res=[]
+        for f in files:
+            res.append(f['filename'])
+        return json.dumps(res)
+    else:
+        return None
+@app.route('/<string:application>/get_file/<string:folder>/<string:filename>')
+def get_file(application,folder,filename):
+
+    if application in config['applications']:
+        logging.info('Returning file  with application = {}, folder = {}, filename = {}'.format(application,folder, filename))
+        bucket_name = config[application]['bucket']
+        file_key = folder+"/" + filename
+        try:
+            response = s3_client.get_object(Bucket=bucket_name, Key=file_key)
+        except botocore.exceptions.ClientError as e: 
+            db.delete_file(application,config[application]['input'],filename)
+            return None
+
+        data = response['Body']
+        return send_file(data, attachment_filename=filename)  
+    else:
+        return None
+
+
 
 @app.route('/<string:application>/get_random_pic_name')
+@login_required
 def get_random_pic_name(application):
 
     if application in config['applications']:
@@ -128,13 +229,14 @@ def get_random_pic_name(application):
         files=db.get_files(application,folder)
         images=[e for e in files if (e['filename'].endswith('.jpg') or e['filename'].endswith('.png'))]
         index=random.randint(0,len(images)-1)
-        res='/'+application+'/'+images[index]['folder']+'/'+images[index]['filename']
+        res='/'+application+'/get_file/'+folder+'/'+images[index]['filename']
         #print('dt ',time.time()-start)
         return res
     else:
         return None
 
 @app.route('/<string:application>/get_json/<string:folder>/<string:image_filename>')
+@login_required
 def get_json(application,folder,image_filename):
 
     if application in config['applications']:
@@ -157,9 +259,8 @@ def get_json(application,folder,image_filename):
 
 
 @app.route('/save/<string:application>',methods=['POST'])
+@login_required
 def savePost(application):
-    
-
     if application in config['applications']:
         bucket_name = config[application]['bucket']
         logging.info('savePost, application = {}, bucket_name = {}'.format(application, bucket_name))
@@ -170,18 +271,21 @@ def savePost(application):
 
 
         #recived markup
-        image_path = dict['imageName'][len(application)+2:]
+
+        image_path = fn.split('/')[3]+'/'+fn.split('/')[4]
+        #print(image_path)
+
         if image_path.endswith('.jpg'):
-            mark_path = image_path.replace('images', config[application]['output']).replace('.jpg','.json')
+            mark_path = image_path.replace(config[application]['input'], config[application]['output']).replace('.jpg','.json')
         else:
             if image_path.endswith('.png'):
-                mark_path = image_path.replace('images', config[application]['output']).replace('.png', '.json')
+                mark_path = image_path.replace(config[application]['input'], config[application]['output']).replace('.png', '.json')
             else:
                 return "wrong file format"
 
         logging.info("Saving markup to " + mark_path)
         s3.Bucket(bucket_name).put_object(Key=mark_path, Body=data)
-        db.put_file(application,config[application]['output'],os.path.basename(mark_path))
+        db.put_file(application,config[application]['output'],os.path.basename(mark_path),user_id=current_user.id)
 
         #move image
         old_location = image_path
@@ -192,7 +296,10 @@ def savePost(application):
 
         s3.Object(bucket_name, old_location).delete()
         db.delete_file(application,config[application]['input'],os.path.basename(old_location))
+        #print('to del mark:',mark_path)
         db.delete_file(application,config[application]['input'],os.path.basename(mark_path))
+        s3.Object(bucket_name,mark_path.replace(config[application]['output'],config[application]['input'])).delete()
+
 
 
         return "ok"

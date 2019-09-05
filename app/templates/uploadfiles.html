@@ -1,5 +1,23 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+
+{% include "header.html" %}
+</head>
+<body>
+
+{% include "nav_bar.html" %}
+
+<div class="description">
+
 <form method="POST" enctype="multipart/form-data" action="/upload/{{application}}">
-<p>Upload files</p>
+
+  <h4>Upload files</h4>
+
   <input type="file" name="files" multiple="">
   <input type="submit" value="send">
 </form>
+
+</div>
+</body>

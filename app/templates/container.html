@@ -1,9 +1,9 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
     <title>Title</title>
-    <script type="text/javascript" src="https://ajax.googleapis.com/ajax/libs/jquery/1.7.2/jquery.min.js"></script>
+
+    {% include "header.html" %}
 
 </head>
 <body>
@@ -127,27 +127,31 @@
     }
 
     document.onkeydown = function(evt) {
-        evt = evt || window.event;
-	console.log(evt.keyCode);
-	if ((evt.keyCode>=49) &&(evt.keyCode<49+types.length))
+        if (window.event)
+            keyCode = window.event.keyCode; // IE
+        else
+            keyCode = evt.which;  // Firefox
+
+	console.log(keyCode);
+	if ((keyCode>=49) &&(keyCode<49+types.length))
 	{
-		type=types[evt.keyCode-49];
+		type=types[keyCode-49];
 		draw(rects,rects_types,type);
 
 	}
-        if (evt.keyCode==67)  //C
+        if (keyCode==67)  //C
         {
             rects.length=0;
             types.length=0;
             draw(rects,rects_types,type);
         }
-        if (evt.keyCode==83)  //S
+        if (keyCode==83)  //S
         {
             document.location.reload(true);
         }
-        if (evt.keyCode==32)//space
+        if (keyCode==32)//space
         {
-            saveAndNext(imageName,rects,types);
+            saveAndNext(imageName,rects,rects_types);
             document.location.reload(true);
         }
     };
