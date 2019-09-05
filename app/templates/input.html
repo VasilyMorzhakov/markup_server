@@ -8,11 +8,13 @@
 <body>
 {% include "nav_bar.html" %}
 
+<div class="description">
+
 <p>Input samples</p>
 <p>Choose month:</p>
    <form action="/input/{{application}}" method="post" id="form">
    <input type="month" id="month" name="month" value="{{cur_month}}">
-   <input type="submit" value ="Show"/>
+   <input class="btn btn-outline-secondary btn-lg" type="submit" value ="Show"/>
    </form>
 <br>
 <table border="1">
@@ -30,6 +32,7 @@
   </tr>
 {% endfor %}
 </tbody>
+</div>
 </table> 
 
 

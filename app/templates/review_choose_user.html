@@ -18,7 +18,7 @@
     <option value= "{{user}}" {%if user == cur_user%} selected{%endif%}>{{user}}</option>"
     {% endfor %}
 </select>
-<input type="submit" value ="Review"/>
+<input class="btn btn-outline-secondary btn-lg" type="submit" value ="Review"/>
 </form>
 <p>Current user to review: {{cur_user}} <p>
 <p>marked files: {{files|length}}</p>
