@@ -22,6 +22,30 @@ f=open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'config.json'),'
 config=json.load(f)
 f.close()
 
+@input_api.route('/input/del_day/<string:application>/<string:folder>/<string:day>', methods=['GET','POST'])
+@login_required
+def del_day(application,folder,day):
+    logging.info('del_day '+application+' '+folder+' '+day)
+    user=db.get_user(current_user.id)
+    if user['role']!='admin':
+        return 'You should be an admin'
+  
+    bucket_name = config[application]['bucket']
+
+    print(application,folder,day)
+    files=db.get_files(application,folder,date=day)
+    for i in range(len(files)):
+        try:
+            s3.Object(bucket_name,folder+'/'+files[i]['filename']).delete()
+            db.delete_file(application,folder,files[i]['filename'])
+
+        except botocore.exceptions.ClientError as e: 
+            logging.error(bucket_name+' '+folder+' '+ files[i]['filename']+' were not deleted')
+
+
+    return redirect('/input/'+application)
+
+
 @input_api.route('/input/<string:application>', methods=['GET','POST'])
 @login_required
 def input_get(application):
