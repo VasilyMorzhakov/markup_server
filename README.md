@@ -14,7 +14,7 @@ User management:
 
   To add a new user:
       cd app
-      ./add_user.sh its_role token 
+      ./add_user.sh  {{role}} {{token}}
       
   roles are two roles: admin, marking
 
@@ -23,7 +23,9 @@ User management:
   add environmental variable - MONGO_DB_PASSWORD 
   
   cd app
-  python3 add_user.py role token
+  python3 add_user.py {{role}} {{token}}
 
   the token may be generated or choosen randomly
+
+  then, you'll be able to register a new user: http://server_address/register/{{role}}/{{token}}
  
