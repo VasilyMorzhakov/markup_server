@@ -8,32 +8,43 @@
 <body>
 {% include "nav_bar.html" %}
 
-<div class="description">
-
-<p>Input samples</p>
-<p>Choose month:</p>
-   <form action="/input/{{application}}" method="post" id="form">
-   <input type="month" id="month" name="month" value="{{cur_month}}">
-   <input class="btn btn-outline-secondary btn-lg" type="submit" value ="Show"/>
-   </form>
-<br>
-<table border="1">
-  <thead>
-    <th> day </th>
-    <th> samples </th>
-    <th> click to delete </th>
-  </thead>
-<tbody>
-{% for day in day_by_day %}
-  <tr>
-  <td>{{day['date']}}</td>
-  <td>{{day['count']}}</td>
-  <td><a href="/input/del_day/{{application}}/{{input}}/{{day['date']}}">delete</a></td>
-  </tr>
-{% endfor %}
-</tbody>
-</div>
-</table> 
-
-
+<!-- <div class="description"> -->
+<div class="container">
+    <div class="row" style="padding-top: 100px;">
+        <div class="col-md-6 offset-md-3">
+          <form action="/input/{{application}}" method="post" id="form">
+            <div class="form-group input-group">
+              <label for="example-month-input" class="col-form-label">Choose month: </label>
+              <input  id="month" class="form-control" name="month" type="month" value="{{cur_month}}" >
+              <div class="input-group-append">
+                  <input class="btn btn-outline-secondary" type="submit" value ="Show" />
+              </div>
+            </div>
+          </form>
+          <br />
+          <table class="table table-bordered table-hover input-table">
+            <thead class="table-success">
+              <th>No</th>
+              <th>Date </th>
+              <th>Samples</th>
+              <th>Delete</th>
+            </thead>
+            <tbody class="table-active">
+            {% if day_by_day | length > 0 %}
+            {% for day in day_by_day %}
+              <tr>
+                <td>{{loop.index}}</td>
+                <td>{{day['date']}}</td>
+                <td>{{day['count']}}</td>
+                <td><a href="/input/del_day/{{application}}/{{input}}/{{day['date']}}"><i class="fas fa-trash-alt"></i></a></td>
+              </tr>
+            {% endfor %}
+            {% else %}
+              <tr class="alert alert-warning"><td colspan="4"><span>There is no data to show</span></td></tr>
+            {% endif %}
+            </tbody>
+          </table> 
+        </div>
+      </div>
+    </div>
 </body>

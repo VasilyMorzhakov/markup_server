@@ -1,44 +1,67 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <title>Register</title>
-
     {% include "header.html" %}
-
 </head>
 
 <body>
-<h1>Register</h1>
-    <form action="" method="post">
-        {{ form.hidden_tag() }}
-        <p>
-            {{ form.username.label }}<br>
-            {{ form.username(size=32) }}<br>
-            {% for error in form.username.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
-        </p>
-        <p>
-            {{ form.email.label }}<br>
-            {{ form.email(size=64) }}<br>
-            {% for error in form.email.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
-        </p>
-        <p>
-            {{ form.password.label }}<br>
-            {{ form.password(size=32) }}<br>
-            {% for error in form.password.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
-        </p>
-        <p>
-            {{ form.password2.label }}<br>
-            {{ form.password2(size=32) }}<br>
-            {% for error in form.password2.errors %}
-            <span style="color: red;">[{{ error }}]</span>
-            {% endfor %}
-        </p>
-        <p>{{ form.submit() }}</p>
-   </form>
+    <div class="container">
+        <div class="row" style="margin-top: 60px;">
+            <div class="col-md-4 offset-md-4">
+                <h3 style="color:dimgray; text-align: center">Register</h3>
+                <form action="" method="post">
+                    {{ form.hidden_tag() }}
+                    <div class="form-group">
+                        <div class="input-group">
+                            <span class="input-group-addon">
+                                <i class="fas fa-user"></i>
+                            </span>
+                            {{ form.username(size=32, class='form-control', placeholder='Username') }}
+                        </div>
+                        {% for error in form.username.errors %}
+                            <span style="color: red;">[{{ error }}]</span>
+                        {% endfor %}
+                    </div>
+                    <div class="form-group">
+                        <div class="input-group">
+                            <span class="input-group-addon">
+                                <i class="fas fa-envelope"></i>
+                            </span>
+                            {{ form.email(size=32, class='form-control', placeholder='Email') }}
+                        </div>
+                        {% for error in form.email.errors %}
+                            <span style="color: red;">[{{ error }}]</span>
+                        {% endfor %}
+                    </div>
+                    <div class="form-group">
+                        <div class="input-group">
+                            <span class="input-group-addon">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                            {{ form.password(size=32, class='form-control', placeholder='Password') }}
+                        </div>
+                        {% for error in form.password.errors %}
+                            <span style="color: red;">[{{ error }}]</span>
+                        {% endfor %}
+                    </div>
+                    <div class="form-group">
+                        <div class="input-group">
+                            <span class="input-group-addon">
+                                <i class="fas fa-lock"></i>
+                            </span>
+                            {{ form.password2(size=32, class='form-control', placeholder='Confirm Password') }}
+                        </div>
+                        {% for error in form.password2.errors %}
+                            <span style="color: red;">[{{ error }}]</span>
+                        {% endfor %}
+                    </div>
+                    <div class="form-group">
+                        <button type="submit" class="btn btn-def btn-block">Register</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
 </body>

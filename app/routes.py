@@ -69,29 +69,21 @@ def index():
 @app.route('/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'GET':
-        return '''
-               <form action='login' method='POST'>
-                <input type='text' name='email' id='email' placeholder='email'/>
-                <input type='password' name='password' id='password' placeholder='password'/>
-                <input type='submit' name='submit'/>
-               </form>
-               '''
+        return render_template('login.html', title='Login')
     email = request.form['email']
-
     if db.check_password(email,request.form['password']):
         user_dict=db.get_user(email)
         user = User()
         user.id = user_dict['email']
         user.name= user_dict['email']
-
         login_user(user)
-        return redirect('/')
+        return redirect('/markup/heads')
     return 'Bad login'
 
 @app.route('/logout')
 def logout():
     logout_user()
-    return 'Logged out'
+    return redirect(url_for('login'))
 @login_manager.unauthorized_handler
 def unauthorized_handler():
     return redirect('/login')

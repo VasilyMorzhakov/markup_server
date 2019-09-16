@@ -9,6 +9,9 @@ import json
 
 ##Create a MongoDB client, open a connection to Amazon DocumentDB as a replica set and specify the read preference as secondary preferred
 line='mongodb+srv://morzhakov:'+os.environ['MONGO_DB_PASSWORD']+'@markup-0yjwh.mongodb.net/test?retryWrites=true&w=majority'
+
+# line='mongodb+srv://morzhakov:VA1425846@markup-0yjwh.mongodb.net/test?retryWrites=true&w=majority'
+
 client = pymongo.MongoClient(line) 
 
 def get_files(application,folder,user_id=None,ext=None,date=None):
