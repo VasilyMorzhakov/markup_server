@@ -129,7 +129,7 @@ def upload_post(application):
                 db.put_file(application,config[application]['input'],file.filename)
                 s3.Bucket(bucket_name).put_object(Key=config[application]['input']+'/'+file.filename, Body=file.read())
 
-        return "ok"
+        return redirect('/input/heads')
     else:
         return "no such application"
 
@@ -158,7 +158,6 @@ def markup(application):
     if application in config['applications']:
         width=config[application]['width']
         height=config[application]['height']
-        
         return render_template(application+'.html',width=width,height=height,application=application,review=False,log_in_or_out="out")
     else:
         return "no such application"

@@ -8,20 +8,24 @@
 
 {% include "nav_bar.html" %}
 
-<!-- <div class="description" id="description"> -->
-<div class="container" style="padding-top: 100px;">
+<div class="description" id="description">
+<!--<div class="container" style="padding-top: 100px;">-->
     {% if review %}<h4>Review page</h4>{%endif%}
-    <div id="typeselect">
-    </div><br />
-    <p>Legend: <span id="legend"></span></p>
     <div>
+        <div id="typeselect">
+        </div><br />
+        <p>Legend: <span id="legend"></span></p>
+        <br />
+        <p>images left: <lable id ="images_left">0</label><p>
+    </div>
+    <div>
+        <canvas id="canvas" width="" height=""></canvas>
+    </div>
+    <div style="text-align: center;">
         <button type="button" class="btn btn-primary" onclick="imageSave()">Save & Next</button>
         <button type="button" class="btn btn-info" style="width:70px" onclick="imageSkip()">Skip</button>
         <button type="button" class="btn btn-danger" style="width:70px" onclick="markDelete()">Delete</button>
     </div>
-    <br />
-    <p>images left: <lable id ="images_left">0</label><p>
-    <canvas id="canvas" width="{{width}}" height="{{height}}"></canvas>
     <script >
 
     type="adult";
@@ -93,6 +97,7 @@
     var canvas = document.getElementById('canvas');
     ctx = canvas.getContext('2d');
     rects = new Array();
+    relativeRects = new Array();
     types=new Array();
     rects_types=new Array();
     drag=false;
@@ -160,7 +165,7 @@
     function draw(rects,rects_types,type,chosen_index)
     {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(imageObj, 0, 0);
+        ctx.drawImage(imageObj, 0, 0, canvas.width, canvas.height);
         ctx.beginPath();
         ctx.font = "30px Arial";
         ctx.fillStyle = 'green';
@@ -221,12 +226,25 @@
     {
         res={};
         res.imageName=imageName;
-        res.rects=rects;
+        
+        relativeRects = [];
+        for(var i=0;i<rects.length;i++){
+            var relativeRect = {};
+            relativeRect.startX=rects[i].startX/canvas.width;
+            relativeRect.startY=rects[i].startY/canvas.height;
+            relativeRect.w=rects[i].w/canvas.width;
+            relativeRect.h=rects[i].h/canvas.height;
+            relativeRects[i] = relativeRect;
+        }
+        res.rects=relativeRects;
         res.types=rects_types;
+
+        res.imageWidth=imageObj.width;
+        res.imageHeight=imageObj.height;
+
         str=JSON.stringify(res);
-
-        // console.log(httpPost('/save/'+application,str));
-
+        console.log(str);
+        httpPost('/save/'+application,str);
     }
 
     document.onkeydown = function(evt) {
@@ -291,7 +309,7 @@
 
 
       imageObj.onload = function()
-      {
+      { 
         draw(rects,rects_types,type,chosen_index);
         
         
@@ -314,22 +332,64 @@
 
       var json_res=httpGet('/'+application+'/get_json/'+folder+'/'+fn);
       var json_parsed=JSON.parse(json_res);
-      if(json_parsed["rects"]!=undefined)
-      {
+      
+      function drawRects(){
+        if(json_parsed["rects"]!=undefined)
+        {
+            relativeRects = json_parsed["rects"];
+            var imageWidth = parseFloat(json_parsed["imageWidth"]);
+            var imageHeight = parseFloat(json_parsed["imageHeight"]);
+            rects = [];
 
-        rects=json_parsed["rects"];
-        rects_types=json_parsed["types"];
-	
+            var canvasWidth=0, canvasHeight=0;
+            if(imageWidth<(window.innerWidth-64)){
+                canvasWidth=imageWidth;
+                canvasHeight=imageHeight;
+            }else{
+                canvasWidth=window.innerWidth-64;
+                canvasHeight=imageHeight*(window.innerWidth-64)/imageWidth;
+            }
+
+            for(var i=0;i<relativeRects.length;i++){
+                var rectObj = {};
+                rectObj.startX=parseFloat(relativeRects[i].startX)*canvasWidth;
+                rectObj.startY=parseFloat(relativeRects[i].startY)*canvasHeight;
+                rectObj.w=parseFloat(relativeRects[i].w)*canvasWidth;
+                rectObj.h=parseFloat(relativeRects[i].h)*canvasHeight;
+                rects[i] = rectObj;
+            }
+            rects_types=json_parsed["types"];
+        
+        }
       }
 
     imageObj.src =imageName;
     types=JSON.parse(httpGet('/'+application+'/get_config/types'));
     type=types[0];
-   
 
+    if(imageObj.width<(window.innerWidth-64)){
+        document.getElementById('canvas').width=imageObj.width;
+        document.getElementById('canvas').height=imageObj.height;
+    }else{
+        document.getElementById('canvas').width=window.innerWidth-64;
+        document.getElementById('canvas').height=imageObj.height*(window.innerWidth-64)/imageObj.width;
+    }
+   
     document.getElementById('legend').innerHTML=getLegend(types);
     document.getElementById('typeselect').innerHTML=getRadioDivContent(types);
-	document.getElementById('images_left').innerHTML=httpGet('/'+application+'/get_left_images');
+    document.getElementById('images_left').innerHTML=httpGet('/'+application+'/get_left_images');
+    
+    $(window).resize(function(){
+        if(imageObj.width<(window.innerWidth-64)){
+            document.getElementById('canvas').width=imageObj.width;
+            document.getElementById('canvas').height=imageObj.height;
+        }else{
+            document.getElementById('canvas').width=window.innerWidth-64;
+            document.getElementById('canvas').height=imageObj.height*(window.innerWidth-64)/imageObj.width;
+        }
+        drawRects();
+        draw(rects,rects_types,type,chosen_index);
+    });
        </script>
 </div>
 </body>
