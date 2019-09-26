@@ -66,14 +66,20 @@ def del_sample(application,folder,filename):
     fn_1=filename+'.json'
     fn_2=filename+'.'+config[application]["image_ext"]
 
+
+    db.delete_file(application, folder, fn_1)
+    db.delete_file(application, folder, fn_2)
+
+
     try:
         s3.Object(bucket_name,folder+'/'+fn_1).delete()
-        db.delete_file(application,folder,fn_1)
+    except botocore.exceptions.ClientError as e:
+        logging.error('delete error: '+bucket_name+' '+ folder+'/'+fn_1)
+    try:
         s3.Object(bucket_name,folder+'/'+fn_2).delete()
-        db.delete_file(application,folder,fn_2)
-
-    except botocore.exceptions.ClientError as e: 
-        return None
+    except botocore.exceptions.ClientError as e:
+        logging.error('delete error: ' + bucket_name + ' ' + folder + '/' + fn_2)
+        
     return redirect('/review/'+application)
 
 @review_api.route('/review/del_all_samples_for_user/<string:application>/<string:folder>', methods=['GET','POST'])
