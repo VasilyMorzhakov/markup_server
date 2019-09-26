@@ -80,4 +80,4 @@ def input_get(application):
             day['count']=len(files)
             day_by_day.append(day)
 
-    return render_template('input.html',application=application,cur_month=cur_month,day_by_day=day_by_day,input=config[application]['input'])
+    return render_template('input.html',application=application,cur_month=cur_month,day_by_day=day_by_day,input=config[application]['input'],log_in_or_out='out')
