@@ -8,23 +8,23 @@
 
 {% include "nav_bar.html" %}
 
-<div class="description" id="description">
-<!--<div class="container" style="padding-top: 100px;">-->
-    {% if review %}<h4>Review page</h4>{%endif%}
+<div class="description">
+    {% if review %}<h4>Review page</h4>{%else%}<h4>Markup page</h4>{%endif%}
+
     <div>
         <div id="typeselect">
-        </div><br />
+        </div>
         <p>Legend: <span id="legend"></span></p>
-        <br />
-        <p>images left: <lable id ="images_left">0</label><p>
+
     </div>
     <div>
         <canvas id="canvas" width="" height=""></canvas>
     </div>
     <div style="text-align: center;">
+
         <button type="button" class="btn btn-primary" onclick="imageSave()">Save & Next</button>
         <button type="button" class="btn btn-info" style="width:70px" onclick="imageSkip()">Skip</button>
-        <button type="button" class="btn btn-danger" style="width:70px" onclick="markDelete()">Delete</button>
+         &ensp; Images left: <label id ="images_left">0</label>
     </div>
     <script >
 
@@ -32,6 +32,8 @@
     chosen_index=-1;
     imageName="";
     application="{{application}}";
+    var curWidth=0;
+    var curHeight=0;
 
     function httpGet(theUrl)
     {
@@ -112,29 +114,27 @@
     
     function mouseDown(e) {
       var was=0;
-     let reference = canvas.offsetParent;
-     shiftX=canvas.offsetLeft +reference.offsetLeft ;
-     shiftY=canvas.offsetTop +reference.offsetTop;
+      let reference = canvas.offsetParent;
+      shiftX=canvas.offsetLeft +reference.offsetLeft ;
+      shiftY=canvas.offsetTop +reference.offsetTop;
       for(var i=0;i<rects.length;i++)
       {
-          
-
-          if((Math.abs(e.pageX - shiftX-rects[i].startX)<30)&&(Math.abs(e.pageY - shiftY-rects[i].startY)<30))
-	  {
+          if((Math.abs(e.pageX - shiftX-rects[i].startX*curWidth)<20)&&(Math.abs(e.pageY - shiftY-rects[i].startY*curHeight)<20))
+	        {
               if(chosen_index==i)
-              	chosen_index=-1;
+                chosen_index=-1;
               else
-		chosen_index=i;
+		        chosen_index=i;
               was=1;
           }
       }
       if(was==0)
       {
       	rect={}
-	    rect.startX = e.pageX - shiftX;
-        rect.startY = e.pageY - shiftY;
-        rect.w=1;
-        rect.h=1;
+	    rect.startX = (e.pageX - shiftX)/curWidth;
+        rect.startY = (e.pageY - shiftY)/curHeight;
+        rect.w=0;
+        rect.h=0;
         rects.push(rect);
         rects_types.push(type);
         drag = true;
@@ -148,7 +148,7 @@
       drag = false;
       if(rects.length>0)
       {
-          if(((rects[rects.length-1].w<10)&&(rects[rects.length-1].h<10))||
+          if(((rects[rects.length-1].w*curWidth<10)&&(rects[rects.length-1].h*curHeight<10))||
              ((rects[rects.length-1].w<0)||(rects[rects.length-1].h<0)))
           {
               rects.splice(rects.length-1,1);
@@ -157,15 +157,28 @@
           }
       }
       draw(rects,rects_types,type,chosen_index);
+    }
 
+    function mouseMove(e) {
+      if (drag) {
+        let reference = canvas.offsetParent;
+        shiftX=canvas.offsetLeft +reference.offsetLeft;
+        shiftY=canvas.offsetTop +reference.offsetTop;
 
-
-
+        rects[rects.length-1].w = ((e.pageX - shiftX) - rects[rects.length-1].startX*curWidth)/curWidth;
+        rects[rects.length-1].h = ((e.pageY - shiftY) - rects[rects.length-1].startY*curHeight)/curHeight;
+        draw(rects,rects_types,type,chosen_index);
+      }
     }
     function draw(rects,rects_types,type,chosen_index)
     {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(imageObj, 0, 0, canvas.width, canvas.height);
+        console.log(canvas.width,canvas.height);
+
+        curWidth=canvas.width;
+        curHeight=canvas.height;
+
         ctx.beginPath();
         ctx.font = "30px Arial";
         ctx.fillStyle = 'green';
@@ -195,49 +208,38 @@
             }
 
 
-	    if(i==chosen_index)
+	        if(i==chosen_index)
             {
                 ctx.strokeStyle = 'orange';
                 ctx.fillStyle = 'orange';
 
             }
 
-
-            ctx.fillText(rects_types[i],rects[i].startX+5,rects[i].startY+20);
-            ctx.rect(rects[i].startX,rects[i].startY, rects[i].w, rects[i].h);
+            ctx.fillText(rects_types[i],rects[i].startX*curWidth+5,rects[i].startY*curHeight+20);
+            ctx.rect(rects[i].startX*curWidth,rects[i].startY*curHeight, rects[i].w*curWidth, rects[i].h*curHeight);
             ctx.stroke();
-		
+
         }
 
 
-    }
-    function mouseMove(e) {
-      if (drag) {
-        let reference = canvas.offsetParent;
-        shiftX=canvas.offsetLeft +reference.offsetLeft ;
-        shiftY=canvas.offsetTop +reference.offsetTop;
-
-        rects[rects.length-1].w= (e.pageX - shiftX) - rects[rects.length-1].startX;
-        rects[rects.length-1].h= (e.pageY - shiftY) - rects[rects.length-1].startY;
-        draw(rects,rects_types,type,chosen_index);
-      }
     }
     function saveAndNext(imageName,rects,rects_types)
     {
         res={};
         res.imageName=imageName;
         
-        relativeRects = [];
+        absRects = [];
         for(var i=0;i<rects.length;i++){
-            var relativeRect = {};
-            relativeRect.startX=rects[i].startX/canvas.width;
-            relativeRect.startY=rects[i].startY/canvas.height;
-            relativeRect.w=rects[i].w/canvas.width;
-            relativeRect.h=rects[i].h/canvas.height;
-            relativeRects[i] = relativeRect;
+            var absRect = {};
+            absRect.startX = rects[i].startX * curWidtht;
+            absRect.startY = rects[i].startY * curHeight;
+            absRect.w = rects[i].w * curWidth;
+            absRect.h = rects[i].h * curHeight;
+            absRects[i] = absRect;
         }
-        res.rects=relativeRects;
-        res.types=rects_types;
+
+        res.rects = absRects;
+        res.types = rects_types;
 
         res.imageWidth=imageObj.width;
         res.imageHeight=imageObj.height;
@@ -252,7 +254,7 @@
             keyCode = window.event.keyCode; // IE
         else
             keyCode = evt.which;  // Firefox
-        //evt = evt || window.event;
+
         if ((keyCode>=49) &&(keyCode<49+types.length))
         {
             type=types[keyCode-49];
@@ -283,22 +285,12 @@
             {%endif%}
 
         }
-        //if (evt.keyCode==32)//space
-        //{
-        //    saveAndNext(imageName,rects,rects_types);
-        //    document.location.reload(true);
-        //}
-	if (keyCode==68)//D
-	{
-		// if(chosen_index>=0)
-		// {	
-			rects.splice(chosen_index,1);
-			rects_types.splice(chosen_index,1);
-			chosen_index=-1;
-			draw(rects,rects_types,type,chosen_index);
 
-		// }
-	}
+	    if (keyCode==68)//D
+	    {
+			markDelete();
+
+	    }
     };
 
     init();
@@ -311,8 +303,8 @@
       imageObj.onload = function()
       { 
         draw(rects,rects_types,type,chosen_index);
-        
-        
+        console.log("resize_init");
+        resize();
       };
 
       
@@ -333,35 +325,31 @@
       var json_res=httpGet('/'+application+'/get_json/'+folder+'/'+fn);
       var json_parsed=JSON.parse(json_res);
       
-      function drawRects(){
-        if(json_parsed["rects"]!=undefined)
-        {
-            relativeRects = json_parsed["rects"];
-            var imageWidth = parseFloat(json_parsed["imageWidth"]);
-            var imageHeight = parseFloat(json_parsed["imageHeight"]);
-            rects = [];
 
-            var canvasWidth=0, canvasHeight=0;
-            if(imageWidth<(window.innerWidth-64)){
-                canvasWidth=imageWidth;
-                canvasHeight=imageHeight;
-            }else{
-                canvasWidth=window.innerWidth-64;
-                canvasHeight=imageHeight*(window.innerWidth-64)/imageWidth;
-            }
+    function resize()
+    {
+        var marginX=64;
+        var marginY=290;
+        if((imageObj.width<(window.innerWidth-marginX))&&(imageObj.height<(window.innerHeight-marginY))){
+            document.getElementById('canvas').width=imageObj.width;
+            document.getElementById('canvas').height=imageObj.height;
+        }else{
+            var kx=imageObj.width/(window.innerWidth-marginX);
+            var ky=imageObj.height/(window.innerHeight-marginY);
 
-            for(var i=0;i<relativeRects.length;i++){
-                var rectObj = {};
-                rectObj.startX=parseFloat(relativeRects[i].startX)*canvasWidth;
-                rectObj.startY=parseFloat(relativeRects[i].startY)*canvasHeight;
-                rectObj.w=parseFloat(relativeRects[i].w)*canvasWidth;
-                rectObj.h=parseFloat(relativeRects[i].h)*canvasHeight;
-                rects[i] = rectObj;
+            if(kx>ky)
+            {
+                document.getElementById('canvas').width=window.innerWidth-marginX;
+                document.getElementById('canvas').height=imageObj.height*(window.innerWidth-marginX)/imageObj.width;
+            }else
+            {
+                document.getElementById('canvas').height=window.innerHeight-marginY;
+                document.getElementById('canvas').width=imageObj.width*(window.innerHeight-marginY)/imageObj.height;
             }
-            rects_types=json_parsed["types"];
-        
         }
-      }
+
+        draw(rects,rects_types,type,chosen_index);
+    }
 
     imageObj.src =imageName;
     types=JSON.parse(httpGet('/'+application+'/get_config/types'));
@@ -378,18 +366,20 @@
     document.getElementById('legend').innerHTML=getLegend(types);
     document.getElementById('typeselect').innerHTML=getRadioDivContent(types);
     document.getElementById('images_left').innerHTML=httpGet('/'+application+'/get_left_images');
-    
-    $(window).resize(function(){
-        if(imageObj.width<(window.innerWidth-64)){
-            document.getElementById('canvas').width=imageObj.width;
-            document.getElementById('canvas').height=imageObj.height;
-        }else{
-            document.getElementById('canvas').width=window.innerWidth-64;
-            document.getElementById('canvas').height=imageObj.height*(window.innerWidth-64)/imageObj.width;
-        }
-        drawRects();
-        draw(rects,rects_types,type,chosen_index);
-    });
+
+    //end resizing
+    function resizedw(){
+        // Haven't resized in 200ms!
+        resize();
+
+    }
+
+    var doit;
+    window.onresize = function(){
+      clearTimeout(doit);
+      doit = setTimeout(resizedw, 200);
+    };
+
        </script>
 </div>
 </body>

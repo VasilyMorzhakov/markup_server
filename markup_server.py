@@ -5,7 +5,6 @@ from app.review import review_api
 from app.input import input_api
 
 app.config["SECRET_KEY"] = os.environ['SECRET_KEY']
-# app.config["SECRET_KEY"] = "abrakadabra"
 app.register_blueprint(review_api)
 app.register_blueprint(input_api)
 
