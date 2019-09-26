@@ -129,7 +129,7 @@ def upload_post(application):
                 db.put_file(application,config[application]['input'],file.filename)
                 s3.Bucket(bucket_name).put_object(Key=config[application]['input']+'/'+file.filename, Body=file.read())
 
-        return redirect('/input/heads')
+        return redirect('/upload/heads')
     else:
         return "no such application"
 
@@ -290,8 +290,6 @@ def savePost(application):
         #print('to del mark:',mark_path)
         db.delete_file(application,config[application]['input'],os.path.basename(mark_path))
         s3.Object(bucket_name,mark_path.replace(config[application]['output'],config[application]['input'])).delete()
-
-
 
         return "ok"
     else:

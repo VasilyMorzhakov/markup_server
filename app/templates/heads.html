@@ -231,10 +231,10 @@
         absRects = [];
         for(var i=0;i<rects.length;i++){
             var absRect = {};
-            absRect.startX = rects[i].startX * curWidth;
-            absRect.startY = rects[i].startY * curHeight;
-            absRect.w = rects[i].w * curWidth;
-            absRect.h = rects[i].h * curHeight;
+            absRect.startX = rects[i].startX * imageObj.width;
+            absRect.startY = rects[i].startY * imageObj.height;
+            absRect.w = rects[i].w * imageObj.width;
+            absRect.h = rects[i].h * imageObj.height;
             absRects[i] = absRect;
         }
 
@@ -247,6 +247,7 @@
         str=JSON.stringify(res);
         console.log(str);
         httpPost('/save/'+application,str);
+
     }
 
     document.onkeydown = function(evt) {
@@ -324,6 +325,22 @@
 
       var json_res=httpGet('/'+application+'/get_json/'+folder+'/'+fn);
       var json_parsed=JSON.parse(json_res);
+      if(json_parsed["rects"]!=undefined)
+      {
+        var relRects = [];
+        for(var i=0;i<json_parsed["rects"].length;i++){
+            var relRect = {};
+            relRect.startX = json_parsed["rects"][i].startX/json_parsed["imageWidth"];
+            relRect.startY = json_parsed["rects"][i].startY/json_parsed["imageHeight"];
+            relRect.w = json_parsed["rects"][i].w/json_parsed["imageWidth"];
+            relRect.h = json_parsed["rects"][i].h/json_parsed["imageHeight"];
+            relRects[i] = relRect;
+        }
+        rects=relRects;
+        rects_types=json_parsed["types"];
+
+      }
+
       
 
     function resize()
