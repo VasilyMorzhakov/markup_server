@@ -120,10 +120,8 @@ def del_all_samples(application,folder):
 def review_file(application,folder,filename):
     logging.info('Visited review')
     user=db.get_user(current_user.id)
-    
     width=config[application]['width']
     height=config[application]['height']
-
     return render_template(application+'.html',width=width,height=height,application=application,review=True,
         filename=filename,folder=folder,image_ext=config[application]['image_ext'])
 

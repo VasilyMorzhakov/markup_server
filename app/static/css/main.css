@@ -4,7 +4,7 @@ body{
 	padding: 0;
 	margin: 0;
   background:#f4f4f4;
-  overflow-x: hidden;
+  overflow-x: auto;
   overflow-y: auto;
 }
 html,h1,h2,h3,h4,h5,h6,a{
@@ -12,7 +12,6 @@ html,h1,h2,h3,h4,h5,h6,a{
 }
 .navbar{
 	background:#7300F9;
-
 }
 .nav-link , .navbar-brand{
 	color: #f4f4f4;
@@ -22,24 +21,16 @@ html,h1,h2,h3,h4,h5,h6,a{
 	margin-right: 1em !important;
 }
 .nav-link:hover{
-	background: #f4f4f4;
 	color: #7300f9;
-
+}
+.navbar{
+	background:#7300F9;
 }
 .navbar-collapse{
  justify-content: flex-end;
 }
-.navbar-toggler{
-  background:#fff !important;
-}
 
 
-.description{
-    position: absolute;
-    top: 5%;
-    margin: auto;
-    padding: 2em;
-}
 .description h4{
 	color:#7300F9 ;
 }

@@ -12,19 +12,25 @@
     {% if review %}<h4>Review page</h4>{%else%}<h4>Markup page</h4>{%endif%}
 
     <div>
+        <div>
+            <label class="radio-inline"><input type="radio" name="resize" id="onresize" checked onclick="onResize();" > Resizing</label>
+            <label class="radio-inline"><input type="radio" name="resize" id="offresize" onclick="offResize();"> Original</label>
+        </div>
         <div id="typeselect">
         </div>
-        <p>Legend: <span id="legend"></span></p>
-
+        <div>Legend1: <span id="legend"></span></div>
+        <!--<div>Legend2: S - Skip; Space - Save&Next; D - Delete;</div>-->
     </div>
     <div>
         <canvas id="canvas" width="" height=""></canvas>
     </div>
     <div style="text-align: center;">
-
-        <button type="button" class="btn btn-primary" onclick="imageSave()">Save & Next</button>
-        <button type="button" class="btn btn-info" style="width:70px" onclick="imageSkip()">Skip</button>
-         &ensp; Images left: <label id ="images_left">0</label>
+        <div class="btngroup">
+            <button type="button" class="btn btn-primary" onclick="imageSave()">Save & Next</button>
+            <button type="button" class="btn btn-info" style="width:70px" onclick="imageSkip()">Skip</button>
+            <button type="button" class="btn btn-info" style="width:70px" onclick="markDelete()">Delete</button>
+        </div>
+        <div>Images left: <label id ="images_left">0</label></div>
     </div>
     <script >
 
@@ -65,11 +71,20 @@
         var divString = '';
         for (var i=0; i<types.length; i++){
             if(i==0)
-                divString += '<div class="form-check-inline"><label class="form-check-label"><input type="radio" class="form-check-input" style="margin-top:7px" name="optradio" id="adult" checked onclick="typeChange('+i+');">'+types[i]+'</label></div>'
+                divString += '<div class="form-check-inline"><label class="form-check-label"><input type="radio" class="form-check-input" style="margin-top:7px" name="type" id="adult" checked onclick="typeChange('+i+');">'+types[i]+'</label></div>'
             else
-                divString += '<div class="form-check-inline"><label class="form-check-label"><input type="radio" class="form-check-input" style="margin-top:7px" name="optradio" id="adult" onclick="typeChange('+i+');">'+types[i]+'</label></div>'
+                divString += '<div class="form-check-inline"><label class="form-check-label"><input type="radio" class="form-check-input" style="margin-top:7px" name="type" id="adult" onclick="typeChange('+i+');">'+types[i]+'</label></div>'
         }
         return(divString);
+    }
+    function onResize(){
+        resize();
+    }
+    function offResize(){
+        resize();
+        //document.getElementById('canvas').width=1520;
+        //document.getElementById('canvas').height=1520;
+        //draw(rects,rects_types,type,chosen_index);
     }
     function typeChange(index){
         type=types[index];
@@ -174,8 +189,7 @@
     {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         ctx.drawImage(imageObj, 0, 0, canvas.width, canvas.height);
-        console.log(canvas.width,canvas.height);
-
+        //ctx.drawImage(imageObj, 0, 0);
         curWidth=canvas.width;
         curHeight=canvas.height;
 
@@ -184,7 +198,6 @@
         ctx.fillStyle = 'green';
         ctx.fillText(type,30,50);
         ctx.stroke();
-
 
         for(var i=0;i<rects.length;i++)
         {
@@ -299,15 +312,11 @@
       var canvas = document.getElementById('canvas');
       var context = canvas.getContext('2d');
 
-
-
       imageObj.onload = function()
       { 
-        draw(rects,rects_types,type,chosen_index);
-        console.log("resize_init");
+        //draw(rects,rects_types,type,chosen_index);
         resize();
       };
-
       
       {% if review %}
 
@@ -341,63 +350,64 @@
 
       }
 
-      
-
     function resize()
     {
         var marginX=64;
         var marginY=290;
-        if((imageObj.width<(window.innerWidth-marginX))&&(imageObj.height<(window.innerHeight-marginY))){
+        if(document.getElementById('onresize').checked==true){
+            if((imageObj.width<(window.innerWidth-marginX))&&(imageObj.height<      (window.innerHeight-marginY))){
+                document.getElementById('canvas').width=imageObj.width;
+                document.getElementById('canvas').height=imageObj.height;
+                document.getElementsByClassName('description')[0].setAttribute('style', 'margin: auto; padding: 67.188px 2em 2em 2em')
+                document.getElementsByClassName('description')[0].style.width=imageObj.width+16*3+"px";
+            }else{
+                var kx=imageObj.width/(window.innerWidth-marginX);
+                var ky=imageObj.height/(window.innerHeight-marginY);
+
+                if(kx>ky)
+                {
+                    document.getElementById('canvas').width=window.innerWidth-marginX-3;
+                    document.getElementById('canvas').height=imageObj.height*(window.innerWidth-marginX)/imageObj.width;
+                    document.getElementsByClassName('description')[0].setAttribute('style', 'position: absolute; top: 8%; padding: 2em')
+                }else
+                {
+                    document.getElementById('canvas').height=window.innerHeight-marginY-3;
+                    document.getElementById('canvas').width=imageObj.width*(window.innerHeight-marginY)/imageObj.height;
+                    document.getElementsByClassName('description')[0].setAttribute('style', 'margin: auto; padding: 67.188px 2em 2em 2em')
+                    document.getElementsByClassName('description')[0].style.width=imageObj.width*(window.innerHeight-marginY)/imageObj.height+16*3+"px";
+                   
+                }
+            }
+
+        } else {
             document.getElementById('canvas').width=imageObj.width;
             document.getElementById('canvas').height=imageObj.height;
-        }else{
-            var kx=imageObj.width/(window.innerWidth-marginX);
-            var ky=imageObj.height/(window.innerHeight-marginY);
-
-            if(kx>ky)
-            {
-                document.getElementById('canvas').width=window.innerWidth-marginX;
-                document.getElementById('canvas').height=imageObj.height*(window.innerWidth-marginX)/imageObj.width;
-            }else
-            {
-                document.getElementById('canvas').height=window.innerHeight-marginY;
-                document.getElementById('canvas').width=imageObj.width*(window.innerHeight-marginY)/imageObj.height;
-            }
+            document.getElementsByClassName('description')[0].setAttribute('style', 'position: absolute; top: 8%; padding: 2em')
         }
-
         draw(rects,rects_types,type,chosen_index);
     }
-
     imageObj.src =imageName;
     types=JSON.parse(httpGet('/'+application+'/get_config/types'));
     type=types[0];
 
-    if(imageObj.width<(window.innerWidth-64)){
-        document.getElementById('canvas').width=imageObj.width;
-        document.getElementById('canvas').height=imageObj.height;
-    }else{
-        document.getElementById('canvas').width=window.innerWidth-64;
-        document.getElementById('canvas').height=imageObj.height*(window.innerWidth-64)/imageObj.width;
-    }
-   
+    //if(imageObj.width<(window.innerWidth-64)){
+    //    document.getElementById('canvas').width=imageObj.width;
+    //    document.getElementById('canvas').height=imageObj.height;
+    //}else{
+    //    document.getElementById('canvas').width=window.innerWidth-64;
+    //    document.getElementById('canvas').height=imageObj.height*(window.innerWidth-64)/imageObj.width;
+    //}
+    //resize();
     document.getElementById('legend').innerHTML=getLegend(types);
     document.getElementById('typeselect').innerHTML=getRadioDivContent(types);
     document.getElementById('images_left').innerHTML=httpGet('/'+application+'/get_left_images');
 
-    //end resizing
-    function resizedw(){
-        // Haven't resized in 200ms!
-        resize();
-
-    }
-
     var doit;
     window.onresize = function(){
       clearTimeout(doit);
-      doit = setTimeout(resizedw, 200);
+      doit = setTimeout(resize, 200);
     };
-
-       </script>
+    </script>
 </div>
 </body>
 </html>
