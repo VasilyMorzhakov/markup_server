@@ -19,18 +19,17 @@
         <div id="typeselect">
         </div>
         <div>Legend: <span id="legend"></span></div>
-        <div>Legend2: S - Skip; Space - Save&Next; D - Delete;</div>
     </div>
     <div>
         <canvas id="canvas" width="" height=""></canvas>
     </div>
     <div style="text-align: center;">
         <div class="btngroup">
-            <button type="button" class="btn btn-primary" onclick="imageSave()">Save & Next</button>
+            
+            Images left: <label id ="images_left">0</label>&nbsp&nbsp
+		<button type="button" class="btn btn-primary" onclick="imageSave()">Save & Next</button>
             <button type="button" class="btn btn-info" style="width:70px" onclick="imageSkip()">Skip</button>
-            <button type="button" class="btn btn-info" style="width:70px" onclick="markDelete()">Delete</button>
         </div>
-        <div>Images left: <label id ="images_left">0</label></div>
     </div>
     <script >
 
@@ -65,6 +64,7 @@
         {
             s+=(i+1).toString()+" - "+types[i]+";  ";
         }
+	s+="S - Skip; Space - Save&Next; D - Delete;";
         return s;
     }
     function getRadioDivContent(types){

@@ -18,14 +18,10 @@ html,h1,h2,h3,h4,h5,h6,a{
 	cursor: pointer;
 }
 .nav-link{
-        color: #f4f4f4;
 	margin-right: 1em !important;
 }
 .nav-link:hover{
 	color: #7300f9;
-}
-.navbar{
-	background:#7300F9;
 }
 .navbar-collapse{
  justify-content: flex-end;
