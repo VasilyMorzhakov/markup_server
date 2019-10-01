@@ -18,8 +18,8 @@
         </div>
         <div id="typeselect">
         </div>
-        <div>Legend1: <span id="legend"></span></div>
-        <!--<div>Legend2: S - Skip; Space - Save&Next; D - Delete;</div>-->
+        <div>Legend: <span id="legend"></span></div>
+        <div>Legend2: S - Skip; Space - Save&Next; D - Delete;</div>
     </div>
     <div>
         <canvas id="canvas" width="" height=""></canvas>
@@ -78,13 +78,12 @@
         return(divString);
     }
     function onResize(){
+        httpPost('/markup/{{application}}/set_resize?resize=True',null);
         resize();
     }
     function offResize(){
+        httpPost('/markup/{{application}}/set_resize?resize=False',null);
         resize();
-        //document.getElementById('canvas').width=1520;
-        //document.getElementById('canvas').height=1520;
-        //draw(rects,rects_types,type,chosen_index);
     }
     function typeChange(index){
         type=types[index];
@@ -399,6 +398,14 @@
     //}
     //resize();
     document.getElementById('legend').innerHTML=getLegend(types);
+    console.log(httpGet('/markup/{{application}}/get_resize'));
+    if(httpGet('/markup/{{application}}/get_resize').localeCompare('True')==0)
+    {
+        document.getElementById('onresize').checked=true;
+    }else
+    {
+        document.getElementById('offresize').checked=true;
+    }
     document.getElementById('typeselect').innerHTML=getRadioDivContent(types);
     document.getElementById('images_left').innerHTML=httpGet('/'+application+'/get_left_images');
 

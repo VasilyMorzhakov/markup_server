@@ -151,16 +151,6 @@ def upload_result_post(application):
 
 
 
-@app.route('/markup/<string:application>')
-@login_required
-def markup(application):
-    logging.info('Visited /markup/'+application)
-    if application in config['applications']:
-        width=config[application]['width']
-        height=config[application]['height']
-        return render_template(application+'.html',width=width,height=height,application=application,review=False,log_in_or_out="out")
-    else:
-        return "no such application"
 
 
 @app.route('/<string:application>/get_left_images')
