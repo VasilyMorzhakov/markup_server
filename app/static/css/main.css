@@ -21,7 +21,7 @@ html,h1,h2,h3,h4,h5,h6,a{
 	margin-right: 1em !important;
 }
 .nav-link:hover{
-	color: #7300f9;
+	color: #73f9f9;
 }
 .navbar-collapse{
  justify-content: flex-end;
