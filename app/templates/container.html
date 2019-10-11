@@ -1,24 +1,44 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Title</title>
-
+    <title>Markup heads</title>
     {% include "header.html" %}
-
 </head>
 <body>
-<p>Legend: <label id="legend">Legend text</label></p>
-<p> "s" - skip, "space" - save and next</p>
-<p>images left: <lable id ="images_left">0</label><p>
 
-<canvas id="canvas" width="{{width}}" height="{{height}}"></canvas>
+{% include "nav_bar.html" %}
 
+<div class="description">
+    {% if review %}<h4>Review page</h4>{%else%}<h4>Markup page</h4>{%endif%}
 
+    <div>
+        <div>
+            <label class="radio-inline"><input type="radio" name="resize" id="onresize" checked onclick="onResize();" > Resizing</label>
+            <label class="radio-inline"><input type="radio" name="resize" id="offresize" onclick="offResize();"> Original</label>
+        </div>
+        <div id="typeselect">
+        </div>
+        <div>Legend: <span id="legend"></span></div>
+    </div>
+    <div>
+        <canvas id="canvas" width="" height=""></canvas>
+    </div>
+    <div style="text-align: center;">
+        <div class="btngroup">
+            
+            Images left: <label id ="images_left">0</label>&nbsp&nbsp
+		<button type="button" class="btn btn-primary" onclick="imageSave()">Save & Next</button>
+            <button type="button" class="btn btn-info" style="width:70px" onclick="imageSkip()">Skip</button>
+        </div>
+    </div>
     <script >
 
-    type="";
+    type="adult";
+    chosen_index=-1;
     imageName="";
     application="{{application}}";
+    var curWidth=0;
+    var curHeight=0;
 
     function httpGet(theUrl)
     {
@@ -39,17 +59,61 @@
     }
     function getLegend(types)
     {
-	var s="";
-	for(var i=0;i<types.length;i++)
-	{
-		s+=(i+1).toString()+" - "+types[i]+";  ";
-	}
-	return s;
+        var s="";
+        for(var i=0;i<types.length;i++)
+        {
+            s+=(i+1).toString()+" - "+types[i]+";  ";
+        }
+	s+="S - Skip; Space - Save&Next; D - Delete;";
+        return s;
     }
-
+    function getRadioDivContent(types){
+        var divString = '';
+        for (var i=0; i<types.length; i++){
+            if(i==0)
+                divString += '<div class="form-check-inline"><label class="form-check-label"><input type="radio" class="form-check-input" style="margin-top:7px" name="type" id="adult" checked onclick="typeChange('+i+');">'+types[i]+'</label></div>'
+            else
+                divString += '<div class="form-check-inline"><label class="form-check-label"><input type="radio" class="form-check-input" style="margin-top:7px" name="type" id="adult" onclick="typeChange('+i+');">'+types[i]+'</label></div>'
+        }
+        return(divString);
+    }
+    function onResize(){
+        httpPost('/markup/{{application}}/set_resize?resize=True',null);
+        resize();
+    }
+    function offResize(){
+        httpPost('/markup/{{application}}/set_resize?resize=False',null);
+        resize();
+    }
+    function typeChange(index){
+        type=types[index];
+        draw(rects,rects_types,type,chosen_index);
+    }
+    function imageSave(){
+        saveAndNext(imageName,rects,rects_types);
+        {% if review %}
+        document.location.href="/review/{{application}}"
+        {%else%}
+        document.location.reload(true);
+        {%endif%}
+    }
+    function imageSkip(){
+        {% if review %}
+        document.location.href="/review/{{application}}"
+        {%else%}
+        document.location.reload(true);
+        {%endif%}
+    }
+    function markDelete(){
+        rects.splice(chosen_index,1);
+        rects_types.splice(chosen_index,1);
+        chosen_index=-1;
+        draw(rects,rects_types,type,chosen_index);
+    }
     var canvas = document.getElementById('canvas');
     ctx = canvas.getContext('2d');
     rects = new Array();
+    relativeRects = new Array();
     types=new Array();
     rects_types=new Array();
     drag=false;
@@ -61,68 +125,140 @@
       canvas.addEventListener('mouseup', mouseUp, false);
       canvas.addEventListener('mousemove', mouseMove, false);
     }
-
+    
     function mouseDown(e) {
-      rect={}
-      rect.startX = e.pageX - this.offsetLeft;
-      rect.startY = e.pageY - this.offsetTop;
-      rect.w=1;
-      rect.h=1;
-      rects.push(rect);
-      rects_types.push(type);
-      drag = true;
+      var was=0;
+      let reference = canvas.offsetParent;
+      shiftX=canvas.offsetLeft +reference.offsetLeft ;
+      shiftY=canvas.offsetTop +reference.offsetTop;
+      for(var i=0;i<rects.length;i++)
+      {
+          if((Math.abs(e.pageX - shiftX-rects[i].startX*curWidth)<20)&&(Math.abs(e.pageY - shiftY-rects[i].startY*curHeight)<20))
+	        {
+              if(chosen_index==i)
+                chosen_index=-1;
+              else
+		        chosen_index=i;
+              was=1;
+          }
+      }
+      if(was==0)
+      {
+      	rect={}
+	    rect.startX = (e.pageX - shiftX)/curWidth;
+        rect.startY = (e.pageY - shiftY)/curHeight;
+        rect.w=0;
+        rect.h=0;
+        rects.push(rect);
+        rects_types.push(type);
+        drag = true;
+      }else
+      {  
+	    draw(rects,rects_types,type,chosen_index);
+      }
     }
 
     function mouseUp() {
       drag = false;
+      if(rects.length>0)
+      {
+          if(((rects[rects.length-1].w*curWidth<10)&&(rects[rects.length-1].h*curHeight<10))||
+             ((rects[rects.length-1].w<0)||(rects[rects.length-1].h<0)))
+          {
+              rects.splice(rects.length-1,1);
+              rects_types.splice(rects.length-1,1);
 
-
+          }
+      }
+      draw(rects,rects_types,type,chosen_index);
     }
-    function draw(rects,types,type)
+
+    function mouseMove(e) {
+      if (drag) {
+        let reference = canvas.offsetParent;
+        shiftX=canvas.offsetLeft +reference.offsetLeft;
+        shiftY=canvas.offsetTop +reference.offsetTop;
+
+        rects[rects.length-1].w = ((e.pageX - shiftX) - rects[rects.length-1].startX*curWidth)/curWidth;
+        rects[rects.length-1].h = ((e.pageY - shiftY) - rects[rects.length-1].startY*curHeight)/curHeight;
+        draw(rects,rects_types,type,chosen_index);
+      }
+    }
+    function draw(rects,rects_types,type,chosen_index)
     {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(imageObj, 0, 0);
+        ctx.drawImage(imageObj, 0, 0, canvas.width, canvas.height);
+        //ctx.drawImage(imageObj, 0, 0);
+        curWidth=canvas.width;
+        curHeight=canvas.height;
+
         ctx.beginPath();
         ctx.font = "30px Arial";
         ctx.fillStyle = 'green';
         ctx.fillText(type,30,50);
         ctx.stroke();
 
-
         for(var i=0;i<rects.length;i++)
         {
             ctx.beginPath();
-            ctx.lineWidth=3;
+            ctx.lineWidth=6;
             ctx.font = "20px Arial";
+            if(rects_types[i].localeCompare("adult")==0)
+            {
+                ctx.strokeStyle = 'red';
+                ctx.fillStyle = 'red';
+            }
+            if(rects_types[i].localeCompare("child")==0)
+            {
+                ctx.strokeStyle = 'yellow';
+                ctx.fillStyle = 'yellow';
+            }
+            if(rects_types[i].localeCompare("hidden")==0)
+            {
+                ctx.strokeStyle = 'blue';
+                ctx.fillStyle = 'blue';
+            }
 
-            ctx.strokeStyle = 'red';
-            ctx.fillStyle = 'red';
-            
 
+	        if(i==chosen_index)
+            {
+                ctx.strokeStyle = 'orange';
+                ctx.fillStyle = 'orange';
 
-            ctx.fillText(types[i],rects[i].startX+5,rects[i].startY+20);
-            ctx.rect(rects[i].startX,rects[i].startY, rects[i].w, rects[i].h);
+            }
+
+            ctx.fillText(rects_types[i],rects[i].startX*curWidth+5,rects[i].startY*curHeight+20);
+            ctx.rect(rects[i].startX*curWidth,rects[i].startY*curHeight, rects[i].w*curWidth, rects[i].h*curHeight);
             ctx.stroke();
+
         }
 
 
     }
-    function mouseMove(e) {
-      if (drag) {
-        rects[rects.length-1].w=(e.pageX - this.offsetLeft) - rects[rects.length-1].startX;
-        rects[rects.length-1].h=(e.pageY - this.offsetTop) - rects[rects.length-1].startY;
-        draw(rects,rects_types,type);
-      }
-    }
-    function saveAndNext(imageName,rects,types)
+    function saveAndNext(imageName,rects,rects_types)
     {
         res={};
         res.imageName=imageName;
-        res.rects=rects;
-        res.types=types;
-        str=JSON.stringify(res);
+        
+        absRects = [];
+        for(var i=0;i<rects.length;i++){
+            var absRect = {};
+            absRect.startX = rects[i].startX * imageObj.width;
+            absRect.startY = rects[i].startY * imageObj.height;
+            absRect.w = rects[i].w * imageObj.width;
+            absRect.h = rects[i].h * imageObj.height;
+            absRects[i] = absRect;
+        }
 
-        console.log(httpPost('/save/'+application,str));
+        res.rects = absRects;
+        res.types = rects_types;
+
+        res.imageWidth=imageObj.width;
+        res.imageHeight=imageObj.height;
+
+        str=JSON.stringify(res);
+        console.log(str);
+        httpPost('/save/'+application,str);
 
     }
 
@@ -132,28 +268,42 @@
         else
             keyCode = evt.which;  // Firefox
 
-	console.log(keyCode);
-	if ((keyCode>=49) &&(keyCode<49+types.length))
-	{
-		type=types[keyCode-49];
-		draw(rects,rects_types,type);
-
-	}
+        if ((keyCode>=49) &&(keyCode<49+types.length))
+        {
+            type=types[keyCode-49];
+            draw(rects,rects_types,type,chosen_index);
+        }
         if (keyCode==67)  //C
         {
             rects.length=0;
-            types.length=0;
-            draw(rects,rects_types,type);
+            rects_types.length=0;
+            draw(rects,rects_types,type,chosen_index);
         }
-        if (keyCode==83)  //S
-        {
-            document.location.reload(true);
-        }
-        if (keyCode==32)//space
+        if ((keyCode==32))  //Space
         {
             saveAndNext(imageName,rects,rects_types);
+            {% if review %}
+            document.location.href="/review/{{application}}"
+            {%else%}
             document.location.reload(true);
+            {%endif%}
+
         }
+        if(keyCode==83) //S
+        {
+            {% if review %}
+            document.location.href="/review/{{application}}"
+            {%else%}
+            document.location.reload(true);
+            {%endif%}
+
+        }
+
+	    if (keyCode==68)//D
+	    {
+			markDelete();
+
+	    }
     };
 
     init();
@@ -161,24 +311,110 @@
       var canvas = document.getElementById('canvas');
       var context = canvas.getContext('2d');
 
-
-
-      
-      imageName= httpGet('/'+application+'/get_random_pic_name');
-      imageObj.src =imageName;
-
-	types=JSON.parse(httpGet('/'+application+'/get_config/types'));
-	type=types[0];
-	document.getElementById('legend').innerHTML=getLegend(types);
-	document.getElementById('images_left').innerHTML=httpGet('/'+application+'/get_left_images');
-
-	imageObj.onload = function()
-      {
-        draw(rects,rects_types,type);
+      imageObj.onload = function()
+      { 
+        //draw(rects,rects_types,type,chosen_index);
+        resize();
       };
+      
+      {% if review %}
 
+      imageName="/{{application}}/get_file/{{folder}}/{{filename}}.{{image_ext}}"
+      fn="{{filename}}.{{image_ext}}"
+      folder="{{folder}}"
+
+      {%else%}
+
+      imageName= httpGet('/'+application+'/get_random_pic_name');
+      fn=imageName.split('/')[4];
+      folder=imageName.split('/')[3];
+
+      {% endif%}
+
+      var json_res=httpGet('/'+application+'/get_json/'+folder+'/'+fn);
+      var json_parsed=JSON.parse(json_res);
+      if(json_parsed["rects"]!=undefined)
+      {
+        var relRects = [];
+        for(var i=0;i<json_parsed["rects"].length;i++){
+            var relRect = {};
+            relRect.startX = json_parsed["rects"][i].startX/json_parsed["imageWidth"];
+            relRect.startY = json_parsed["rects"][i].startY/json_parsed["imageHeight"];
+            relRect.w = json_parsed["rects"][i].w/json_parsed["imageWidth"];
+            relRect.h = json_parsed["rects"][i].h/json_parsed["imageHeight"];
+            relRects[i] = relRect;
+        }
+        rects=relRects;
+        rects_types=json_parsed["types"];
+
+      }
+
+    function resize()
+    {
+        var marginX=64;
+        var marginY=290;
+        if(document.getElementById('onresize').checked==true){
+            if((imageObj.width<(window.innerWidth-marginX))&&(imageObj.height<      (window.innerHeight-marginY))){
+                document.getElementById('canvas').width=imageObj.width;
+                document.getElementById('canvas').height=imageObj.height;
+                document.getElementsByClassName('description')[0].setAttribute('style', 'margin: auto; padding: 67.188px 2em 2em 2em')
+                document.getElementsByClassName('description')[0].style.width=imageObj.width+16*3+"px";
+            }else{
+                var kx=imageObj.width/(window.innerWidth-marginX);
+                var ky=imageObj.height/(window.innerHeight-marginY);
+
+                if(kx>ky)
+                {
+                    document.getElementById('canvas').width=window.innerWidth-marginX-3;
+                    document.getElementById('canvas').height=imageObj.height*(window.innerWidth-marginX)/imageObj.width;
+                    document.getElementsByClassName('description')[0].setAttribute('style', 'position: absolute; top: 8%; padding: 2em')
+                }else
+                {
+                    document.getElementById('canvas').height=window.innerHeight-marginY-3;
+                    document.getElementById('canvas').width=imageObj.width*(window.innerHeight-marginY)/imageObj.height;
+                    document.getElementsByClassName('description')[0].setAttribute('style', 'margin: auto; padding: 67.188px 2em 2em 2em')
+                    document.getElementsByClassName('description')[0].style.width=imageObj.width*(window.innerHeight-marginY)/imageObj.height+16*3+"px";
+                   
+                }
+            }
+
+        } else {
+            document.getElementById('canvas').width=imageObj.width;
+            document.getElementById('canvas').height=imageObj.height;
+            document.getElementsByClassName('description')[0].setAttribute('style', 'position: absolute; top: 8%; padding: 2em')
+        }
+        draw(rects,rects_types,type,chosen_index);
+    }
+    imageObj.src =imageName;
+    types=JSON.parse(httpGet('/'+application+'/get_config/types'));
+    type=types[0];
+
+    //if(imageObj.width<(window.innerWidth-64)){
+    //    document.getElementById('canvas').width=imageObj.width;
+    //    document.getElementById('canvas').height=imageObj.height;
+    //}else{
+    //    document.getElementById('canvas').width=window.innerWidth-64;
+    //    document.getElementById('canvas').height=imageObj.height*(window.innerWidth-64)/imageObj.width;
+    //}
+    //resize();
+    document.getElementById('legend').innerHTML=getLegend(types);
+    console.log(httpGet('/markup/{{application}}/get_resize'));
+    if(httpGet('/markup/{{application}}/get_resize').localeCompare('True')==0)
+    {
+        document.getElementById('onresize').checked=true;
+    }else
+    {
+        document.getElementById('offresize').checked=true;
+    }
+    document.getElementById('typeselect').innerHTML=getRadioDivContent(types);
+    document.getElementById('images_left').innerHTML=httpGet('/'+application+'/get_left_images');
+
+    var doit;
+    window.onresize = function(){
+      clearTimeout(doit);
+      doit = setTimeout(resize, 200);
+    };
     </script>
-  </body>
-
+</div>
 </body>
 </html>
