@@ -317,37 +317,52 @@
         resize();
       };
       
+      var fileFound=true;
+      
       {% if review %}
 
       imageName="/{{application}}/get_file/{{folder}}/{{filename}}.{{image_ext}}"
+      if(imageName.localeCompare('None')==0)throw "file not found";
+
+
       fn="{{filename}}.{{image_ext}}"
       folder="{{folder}}"
 
       {%else%}
 
       imageName= httpGet('/'+application+'/get_random_pic_name');
-      fn=imageName.split('/')[4];
-      folder=imageName.split('/')[3];
+      
+      if(imageName.localeCompare('None')!=0)
+      {
+      	fn=imageName.split('/')[4];
+	folder=imageName.split('/')[3];
+      }else
+        fileFound=false;
+  
 
       {% endif%}
 
-      var json_res=httpGet('/'+application+'/get_json/'+folder+'/'+fn);
-      var json_parsed=JSON.parse(json_res);
-      if(json_parsed["rects"]!=undefined)
+      if(fileFound)
       {
-        var relRects = [];
-        for(var i=0;i<json_parsed["rects"].length;i++){
-            var relRect = {};
-            relRect.startX = json_parsed["rects"][i].startX/json_parsed["imageWidth"];
-            relRect.startY = json_parsed["rects"][i].startY/json_parsed["imageHeight"];
-            relRect.w = json_parsed["rects"][i].w/json_parsed["imageWidth"];
-            relRect.h = json_parsed["rects"][i].h/json_parsed["imageHeight"];
-            relRects[i] = relRect;
+        var json_res=httpGet('/'+application+'/get_json/'+folder+'/'+fn);
+        var json_parsed=JSON.parse(json_res);
+        if(json_parsed["rects"]!=undefined)
+        {
+          var relRects = [];
+          for(var i=0;i<json_parsed["rects"].length;i++){
+              var relRect = {};
+              relRect.startX = json_parsed["rects"][i].startX/json_parsed["imageWidth"];
+              relRect.startY = json_parsed["rects"][i].startY/json_parsed["imageHeight"];
+              relRect.w = json_parsed["rects"][i].w/json_parsed["imageWidth"];
+              relRect.h = json_parsed["rects"][i].h/json_parsed["imageHeight"];
+              relRects[i] = relRect;
+          }
+          rects=relRects;
+          rects_types=json_parsed["types"];
         }
-        rects=relRects;
-        rects_types=json_parsed["types"];
 
       }
+
 
     function resize()
     {

@@ -33,7 +33,7 @@
     </div>
     <script >
 
-    type="adult";
+    type="";
     chosen_index=-1;
     imageName="";
     application="{{application}}";
@@ -133,7 +133,7 @@
       shiftY=canvas.offsetTop +reference.offsetTop;
       for(var i=0;i<rects.length;i++)
       {
-          if((Math.abs(e.pageX - shiftX-rects[i].startX*curWidth)<20)&&(Math.abs(e.pageY - shiftY-rects[i].startY*curHeight)<20))
+          if((Math.abs(e.pageX - shiftX-rects[i].startX*curWidth)<10)&&(Math.abs(e.pageY - shiftY-rects[i].startY*curHeight)<10))
 	        {
               if(chosen_index==i)
                 chosen_index=-1;
@@ -203,24 +203,25 @@
             ctx.beginPath();
             ctx.lineWidth=6;
             ctx.font = "20px Arial";
-            if(rects_types[i].localeCompare("adult")==0)
+            
+            if(rects_types[i].localeCompare("cont_p1")==0)
             {
                 ctx.strokeStyle = 'red';
                 ctx.fillStyle = 'red';
             }
-            if(rects_types[i].localeCompare("child")==0)
+            if(rects_types[i].localeCompare("cont_p2")==0)
             {
                 ctx.strokeStyle = 'yellow';
                 ctx.fillStyle = 'yellow';
             }
-            if(rects_types[i].localeCompare("hidden")==0)
+            if(rects_types[i].localeCompare("cont_p3")==0)
             {
                 ctx.strokeStyle = 'blue';
                 ctx.fillStyle = 'blue';
             }
 
 
-	        if(i==chosen_index)
+	    if(i==chosen_index)
             {
                 ctx.strokeStyle = 'orange';
                 ctx.fillStyle = 'orange';
@@ -316,36 +317,50 @@
         //draw(rects,rects_types,type,chosen_index);
         resize();
       };
+
+      var fileFound=true;
       
       {% if review %}
 
       imageName="/{{application}}/get_file/{{folder}}/{{filename}}.{{image_ext}}"
+      if(imageName.localeCompare('None')==0)throw "file not found";
+
+
       fn="{{filename}}.{{image_ext}}"
       folder="{{folder}}"
 
       {%else%}
 
       imageName= httpGet('/'+application+'/get_random_pic_name');
-      fn=imageName.split('/')[4];
-      folder=imageName.split('/')[3];
+      
+      if(imageName.localeCompare('None')!=0)
+      {
+      	fn=imageName.split('/')[4];
+	folder=imageName.split('/')[3];
+      }else
+        fileFound=false;
+  
 
       {% endif%}
 
-      var json_res=httpGet('/'+application+'/get_json/'+folder+'/'+fn);
-      var json_parsed=JSON.parse(json_res);
-      if(json_parsed["rects"]!=undefined)
+      if(fileFound)
       {
-        var relRects = [];
-        for(var i=0;i<json_parsed["rects"].length;i++){
-            var relRect = {};
-            relRect.startX = json_parsed["rects"][i].startX/json_parsed["imageWidth"];
-            relRect.startY = json_parsed["rects"][i].startY/json_parsed["imageHeight"];
-            relRect.w = json_parsed["rects"][i].w/json_parsed["imageWidth"];
-            relRect.h = json_parsed["rects"][i].h/json_parsed["imageHeight"];
-            relRects[i] = relRect;
+        var json_res=httpGet('/'+application+'/get_json/'+folder+'/'+fn);
+        var json_parsed=JSON.parse(json_res);
+        if(json_parsed["rects"]!=undefined)
+        {
+          var relRects = [];
+          for(var i=0;i<json_parsed["rects"].length;i++){
+              var relRect = {};
+              relRect.startX = json_parsed["rects"][i].startX/json_parsed["imageWidth"];
+              relRect.startY = json_parsed["rects"][i].startY/json_parsed["imageHeight"];
+              relRect.w = json_parsed["rects"][i].w/json_parsed["imageWidth"];
+              relRect.h = json_parsed["rects"][i].h/json_parsed["imageHeight"];
+              relRects[i] = relRect;
+          }
+          rects=relRects;
+          rects_types=json_parsed["types"];
         }
-        rects=relRects;
-        rects_types=json_parsed["types"];
 
       }
 

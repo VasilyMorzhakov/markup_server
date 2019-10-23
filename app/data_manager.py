@@ -129,7 +129,7 @@ def upload_post(application):
                 db.put_file(application,config[application]['input'],file.filename)
                 s3.Bucket(bucket_name).put_object(Key=config[application]['input']+'/'+file.filename, Body=file.read())
 
-        return redirect('/upload/heads')
+        return redirect('/upload/'+application)
     else:
         return "no such application"
 
@@ -209,12 +209,14 @@ def get_random_pic_name(application):
         folder=config[application]['input']
         files=db.get_files(application,folder)
         images=[e for e in files if (e['filename'].endswith('.jpg') or e['filename'].endswith('.png'))]
+        if len(images)==0:
+            return 'None'
         index=random.randint(0,len(images)-1)
         res='/'+application+'/get_file/'+folder+'/'+images[index]['filename']
         #print('dt ',time.time()-start)
         return res
     else:
-        return None
+        return 'None'
 
 @app.route('/<string:application>/get_json/<string:folder>/<string:image_filename>')
 @login_required
