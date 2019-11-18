@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Markup heads</title>
+    <title>Markup door</title>
     {% include "header.html" %}
 </head>
 <body>
@@ -206,17 +206,13 @@
             ctx.beginPath();
             ctx.lineWidth=6;
             ctx.font = "20px Arial";
-            if(rects_types[i].localeCompare("adult")==0)
+            if(rects_types[i].localeCompare("opened")==0)
             {
                 ctx.strokeStyle = 'red';
                 ctx.fillStyle = 'red';
             }
-            if(rects_types[i].localeCompare("child")==0)
-            {
-                ctx.strokeStyle = 'yellow';
-                ctx.fillStyle = 'yellow';
-            }
-            if(rects_types[i].localeCompare("hidden")==0)
+
+            if(rects_types[i].localeCompare("closed")==0)
             {
                 ctx.strokeStyle = 'blue';
                 ctx.fillStyle = 'blue';
@@ -412,6 +408,7 @@
        imageObj.src =imageName;
     }else
     {
+        console.log('/static/blank-img.jpg');
         imageObj.src='/static/blank-img.jpg';
     }
     types=JSON.parse(httpGet('/'+application+'/get_config/types'));

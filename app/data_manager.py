@@ -231,7 +231,6 @@ def get_json(application,folder,image_filename):
 
             response=s3_client.get_object(Bucket=bucket_name, Key=file_key)
             str = response['Body'].read().decode('utf-8') 
-            #print(time.time()-start)
             return str
         except botocore.exceptions.ClientError as e: 
             return '{}'
