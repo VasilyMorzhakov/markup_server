@@ -13,6 +13,7 @@ import botocore
 from app import db
 from app.forms import RegistrationForm
 from flask_login import login_user, logout_user, current_user, login_required,LoginManager,UserMixin
+from flask import session
 
 
 s3 = boto3.resource('s3')
@@ -77,7 +78,10 @@ def login():
         user.id = user_dict['email']
         user.name= user_dict['email']
         login_user(user)
-        return redirect('/markup/heads')
+        if 'url' in session:
+            return redirect(session['url'])
+        else:
+            return 'you have logged in the makrup service'
     return 'Bad login'
 
 @app.route('/logout')

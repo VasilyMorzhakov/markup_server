@@ -16,6 +16,8 @@ f.close()
 @markuppage_api.route('/markup/<string:application>')
 @login_required
 def markup(application):
+    session['url'] = '/markup/'+application
+
     logging.info('Visited /markup/'+application)
     if application in config['applications']:
         width=config[application]['width']
