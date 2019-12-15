@@ -161,9 +161,7 @@ def upload_result_post(application):
 def get_left_images(application):
     if application in config['applications']:
         folder=config[application]['input']
-        files=db.get_files(application,folder)
-        images=[e for e in files if (e['filename'].endswith('.jpg') or e['filename'].endswith('.png'))]
-        return str(len(images))
+        return str(db.get_files_count(application,folder,exts=['.png','.jpg']))
     else:
         return None
 
@@ -207,18 +205,17 @@ def get_file(application,folder,filename):
 @app.route('/<string:application>/get_random_pic_name')
 @login_required
 def get_random_pic_name(application):
+    max_n=1024
 
     if application in config['applications']:
-        start=time.time()
+        
         folder=config[application]['input']
-        files=db.get_files(application,folder)
-        images=[e for e in files if (e['filename'].endswith('.jpg') or e['filename'].endswith('.png'))]
-        if len(images)==0:
-            return 'None'
-        index=random.randint(0,len(images)-1)
-        res='/'+application+'/get_file/'+folder+'/'+images[index]['filename']
-        #print('dt ',time.time()-start)
-        return res
+
+        
+        doc=db.get_random_file(application,folder,exts=['.jpg','.png'])
+        if not doc is None:
+            return '/'+application+'/get_file/'+folder+'/'+doc['filename']
+        return 'None'
     else:
         return 'None'
 
