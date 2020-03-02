@@ -6,12 +6,46 @@ from passlib.hash import sha256_crypt
 from datetime import datetime
 import boto3
 import json
+import random
 
 ##Create a MongoDB client, open a connection to Amazon DocumentDB as a replica set and specify the read preference as secondary preferred
 line='mongodb+srv://morzhakov:'+os.environ['MONGO_DB_PASSWORD']+'@markup-0yjwh.mongodb.net/test?retryWrites=true&w=majority'
 
 
 client = pymongo.MongoClient(line) 
+
+def get_random_file(application,folder,user_id=None,date=None,exts=None):
+    filter={'folder':folder}
+    if not user_id is None:
+        filter['user_id']=user_id
+    if not date is None:
+        filter['date']=date
+    if not exts is None:
+        dicts=[]
+        for j in range(len(exts)):
+            dicts.append({'filename':{'$regex':'.*'+exts[j]+'.*'}})
+        filter['$or']=dicts
+
+    count = client[application].files.find(filter).count()
+    if count==0:
+        return None
+    index= random.randint(0,count-1)
+    return client[application].files.find(filter)[index]
+
+def get_files_count(application,folder,user_id=None,date=None,exts=None):
+    filter={'folder':folder}
+    if not user_id is None:
+        filter['user_id']=user_id
+    if not date is None:
+        filter['date']=date
+    if not exts is None:
+        dicts=[]
+        for j in range(len(exts)):
+            dicts.append({'filename':{'$regex':'.*'+exts[j]+'.*'}})
+        filter['$or']=dicts
+    count = client[application].files.find(filter).count()
+    return count
+       
 
 def get_files(application,folder,user_id=None,ext=None,date=None):
     filter={'folder':folder}
@@ -21,15 +55,17 @@ def get_files(application,folder,user_id=None,ext=None,date=None):
        filter['date']=date
 
     cursor=client[application].files.find(filter)
+
     res=[]
     for document in cursor:
-
         if not ext is None:
             
             if ext in document['filename']:
                 res.append(document)
         else:
             res.append(document)
+            
+
     return res
 
 
