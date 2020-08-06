@@ -16,8 +16,10 @@ from flask_login import login_user, logout_user, current_user, login_required,Lo
 from flask import session
 
 
-s3 = boto3.resource('s3')
-s3_client  = boto3.client('s3')
+s3 = boto3.resource('s3',aws_access_key_id=os.environ['AWS_KEY_ID'],
+                             aws_secret_access_key=os.environ['AWS_KEY'])
+s3_client  = boto3.client('s3',aws_access_key_id=os.environ['AWS_KEY_ID'],
+                             aws_secret_access_key=os.environ['AWS_KEY'])
 
 
 

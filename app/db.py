@@ -9,8 +9,8 @@ import json
 import random
 
 ##Create a MongoDB client, open a connection to Amazon DocumentDB as a replica set and specify the read preference as secondary preferred
-line='mongodb+srv://morzhakov:'+os.environ['MONGO_DB_PASSWORD']+'@markup-0yjwh.mongodb.net/test?retryWrites=true&w=majority'
-
+line=os.environ['MONGO_DB_ADDRESS']
+collection=os.environ['MONGO_COLLECTION']
 
 client = pymongo.MongoClient(line) 
 
@@ -80,42 +80,42 @@ def put_file(application,folder,file,user_id=None):
         client[application].files.insert_one({'folder':folder,'filename':file,'date':date})
 
 def del_pre_user(role,token):
-    client['adminka'].pre_users.delete_one({'role':role,'token':token})
+    client[collection].pre_users.delete_one({'role':role,'token':token})
 
 def add_pre_user(role,token):
-    if not client['adminka'].pre_users.find_one({'role':role,'token':token}):
-        client['adminka'].pre_users.insert_one({'role':role,'token':token})
+    if not client[collection].pre_users.find_one({'role':role,'token':token}):
+        client[collection].pre_users.insert_one({'role':role,'token':token})
 
 def check_pre_user(role,token):
-    if client['adminka'].pre_users.find_one({'role':role,'token':token}):
+    if client[collection].pre_users.find_one({'role':role,'token':token}):
         return True
     else:
         return False
 
 def add_user(name,email,password,role):
     hash=sha256_crypt.hash(password)
-    if not client['adminka'].users.find_one({'name':name}):
-        client['adminka'].users.insert_one({'name':name,'email':email,'hash':hash,'role':role})
+    if not client[collection].users.find_one({'name':name}):
+        client[collection].users.insert_one({'name':name,'email':email,'hash':hash,'role':role})
     return
 
 def is_user_by_name(name):
-    if client['adminka'].users.find_one({'name':name}):
+    if client[collection].users.find_one({'name':name}):
         return True
     return False
 
 def is_user_by_email(email):
-    if client['adminka'].users.find_one({'email':email}):
+    if client[collection].users.find_one({'email':email}):
         return True
     return False
 
 def check_password(email,password):
-    user=client['adminka'].users.find_one({'email':email})
+    user=client[collection].users.find_one({'email':email})
     if user is None:
         return False
     return sha256_crypt.verify(password,user['hash'])
     
 def get_all_users():
-    users=client['adminka'].users.find({})
+    users=client[collection].users.find({})
     names=[]
     ids=[]
     for user in users:
@@ -123,48 +123,5 @@ def get_all_users():
         ids.append(user['email'])
     return names,ids
 def get_user(email):
-    return client['adminka'].users.find_one({'email':email})
+    return client[collection].users.find_one({'email':email})
     
-
-if __name__=='__main__':
-    files=get_files('heads','images',user_id=None)
-    print(len(files))
-    
-
-    f=open(os.path.join(os.path.dirname(os.path.realpath(__file__)),'config.json'),'r+')
-    config=json.load(f)
-    f.close()
-
-    s3 = boto3.resource('s3')
-    s3_client  = boto3.client('s3')
-
-    bucket_name = config['heads']['bucket']
-    
-  
-    for i in range(len(files)):
-        print(i)
-        delete_file('heads','images',files[i]['filename'])
-        s3.Object(bucket_name,'images'+'/'+files[i]['filename']).delete()
-        
-
-    '''add_pre_user('Vasyutka','letscallittoken')
-    print(check_pre_user('Vasyutka','letscallittoken'))'''
-
-    '''cars = []
-    for i in range(2000):
-        cars.append({'id':i})
-
-    db=client.cars
-    db.items.drop()
-    
-
-    db.items.insert_many(cars)
-    cursor = db.items.find({})
-
-    start=time.time()    
-    res=[]
-    for document in cursor:
-          res.append(document)
-    print(time.time()-start,' len: ',len(res))
-	
-    client.close()'''

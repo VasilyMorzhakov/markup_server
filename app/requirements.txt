@@ -1,0 +1,8 @@
+flask==1.0.3
+flask_wtf==0.14.2
+flask_login==0.4.1
+requests==2.18.4
+boto3==1.9.159
+pymongo[tls,srv]==3.8.0
+passlib==1.7.1
+Flask-Bootstrap==3.3.7.1

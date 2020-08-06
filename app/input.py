@@ -13,8 +13,11 @@ import datetime
 import calendar
 
 
-s3 = boto3.resource('s3')
-s3_client  = boto3.client('s3')
+s3 = boto3.resource('s3',aws_access_key_id=os.environ['AWS_KEY_ID'],
+                             aws_secret_access_key=os.environ['AWS_KEY'])
+s3_client  = boto3.client('s3',aws_access_key_id=os.environ['AWS_KEY_ID'],
+                             aws_secret_access_key=os.environ['AWS_KEY'])
+
 
 
 input_api = Blueprint('input_api', __name__)
