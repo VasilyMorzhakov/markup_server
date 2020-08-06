@@ -1,27 +1,27 @@
 This is a markup server, which may be connected to an ML core.
 
-run ./start.sh to start the service in a debug mode without nginx. 
 
+Environmental variables:
+   SECRET_KEY - random key
+   MONGO_DB_ADDRESS - like mongodb:// ....  , that contain everything to connect
+   MONGO_COLLECTION - just a name of the collection for this service
+   AWS_KEY
+   AWS_KEY_ID
 
-User management:
+Also, I couldn't find a way to put the site address-line to envs in confd_nginx.conf, so pay attention to YOUR_SITE before build docker.
 
-  Linux:
+To run the docker from Docker Hub, for example:
 
-  There is a script app/add_user_default.sh, rename it to add_user.sh locally and change default password to MONGO actual one.
-  Make it executable by chmod.
-
-  To add a new user:
-      cd app
-      ./add_user.sh its_role token (for example: ./add_user.sh admin X9FUkt763)
-      
-  roles are two roles: admin, marking
-
-  Windows:
-  
-  add environmental variable - MONGO_DB_PASSWORD 
-  
-  cd app
-  python3 add_user.py role token
-
-  the token may be generated or chosen randomly
- 
+```
+sudo docker system prune
+sudo docker stop markup_server
+sudo docker rm markup_server
+echo "YOUR_DOCKER_HUB_PASSWORD" | sudo docker login -u "YOUR_DOCKER_HUB_PASS" --password-stdin
+sudo docker pull "IMAGE_NAME"
+sudo docker create --name markup_server -p 27017:27017 -p 443:443 \
+            -e ....
+            "IMAGE_NAME"
+sudo docker cp rembrain_and_bundle.crt markup_server:/app/rembrain.crt
+sudo docker cp rembrain.pem markup_server:/app/rembrain.pem
+sudo docker start markup_server
+```

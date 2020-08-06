@@ -1,3 +1,0 @@
-export MONGO_DB_PASSWORD="MONGO_DB_PASSWORD"
-export SECRET_KEY="SECRET_KEY"
-python3 markup_server.py
