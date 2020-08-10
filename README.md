@@ -1,9 +1,12 @@
 This is a markup server, which may be connected to an ML core.
 
 
+You can run it by a docker with nginx as a web-server.
+To start you will need a MONGODB and an S3 bucket, where all input and result annotation are stored.
+
 Pay attention to YOUR_SITE before build docker - this should correspond to your site name.
 
-You can build and run:
+To build and run:
 
 ```
 sudo docker build -t markup .
@@ -23,12 +26,12 @@ Environmental variables:
    - AWS_KEY
    - AWS_KEY_ID
 
-You can exclude the SSL certificate by changing protocol in nginx config
+You can exclude the SSL certificate by changing protocol in nginx config (change 443 port to 80 and remove lines about ssl certificates).
 
 
 To add a new user, run <b>add_user.sh role token</b> and a token. Then, you can register a new user passing him the token and the following link: <b>your_site.com/register/role/token</b>.
 
-Or, being an admin, you can add user through the address line: /add_pre_user/
+Or, being an admin, you can add user through the address line: /add_pre_user/role/token (token is a random key-digit sequence)
 
 Possible roles for users:
   - admin
@@ -46,4 +49,4 @@ There are two ways to upload new data to markup.
 
 Also, to debug, you can run <b>python3 main.py</b> from app folder.
 
-You'll also need two more env variables: DEBUG_ADMIN_EMAIL and DEBUG_ADMIN_PASSWORD.
+You'll also need two more env variables DEBUG_ADMIN_EMAIL and DEBUG_ADMIN_PASSWORD to create a new admin user without running <b>add_user.sh</b> script.
