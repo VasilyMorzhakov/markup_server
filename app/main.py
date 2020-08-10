@@ -105,6 +105,17 @@ def logout():
 def unauthorized_handler():
     return redirect('/login')
 
+@app.route('/add_pre_user/<string:role>/<string:token>', methods=['GET'])
+@login_required
+def add_pre_user(role,token):
+    print('add  pre user',role,token)
+    user=db.get_user(current_user.id)
+    if user['role']!='admin':
+        return 'You should be an admin'
+    b.add_pre_user(role,token)
+    return "pre user was added"
+    
+
 @app.route('/register/<string:role>/<string:token>', methods=['GET'])
 def register_get(role,token):
     print('register ',role,token)
