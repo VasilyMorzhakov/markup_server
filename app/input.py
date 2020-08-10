@@ -5,7 +5,7 @@ import json
 import logging
 from flask_login import login_user, logout_user, current_user, login_required,LoginManager,UserMixin
 from flask import Blueprint,session
-from app import db
+import db
 import os
 import boto3
 import botocore
@@ -84,3 +84,4 @@ def input_get(application):
             day_by_day.append(day)
 
     return render_template('input.html',application=application,cur_month=cur_month,day_by_day=day_by_day,input=config[application]['input'],log_in_or_out='out')
+

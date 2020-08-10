@@ -124,4 +124,3 @@ def get_all_users():
     return names,ids
 def get_user(email):
     return client[collection].users.find_one({'email':email})
-    

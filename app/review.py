@@ -5,7 +5,7 @@ import json
 import logging
 from flask_login import login_user, logout_user, current_user, login_required,LoginManager,UserMixin
 from flask import Blueprint,session
-from app import db
+import db
 import os
 import boto3
 import botocore
@@ -145,8 +145,4 @@ def files(application,folder,filename):
         data = response['Body']
         return send_file(data, attachment_filename=filename)  
     return None
-
-
-
-
 

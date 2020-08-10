@@ -1,4 +1,6 @@
 flask==1.0.3
+werkzeug==0.16.1
+email-validator
 flask_wtf==0.14.2
 flask_login==0.4.1
 requests==2.18.4
