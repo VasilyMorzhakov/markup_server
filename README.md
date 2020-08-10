@@ -1,13 +1,6 @@
 This is a markup server, which may be connected to an ML core.
 
 
-Environmental variables:
-   SECRET_KEY - random key
-   MONGO_DB_ADDRESS - like mongodb:// ....  , that contain everything to connect
-   MONGO_COLLECTION - just a name of the collection for this service
-   AWS_KEY
-   AWS_KEY_ID
-
 Pay attention to YOUR_SITE before build docker - this should correspond to your site name.
 
 To run the docker from Docker Hub, for example:
@@ -25,6 +18,14 @@ sudo docker cp ssl_and_bundle.crt markup_server:/app/key.crt
 sudo docker cp key.pem markup_server:/app/key.pem
 sudo docker start markup_server
 ```
+
+
+Environmental variables:
+   - SECRET_KEY - random key
+   - MONGO_DB_ADDRESS - like mongodb:// ....  , that contain everything to connect
+   - MONGO_COLLECTION - just a name of the collection for this service
+   - AWS_KEY
+   - AWS_KEY_ID
 
 You can exclude the SSL certificate by changing protocol in nginx config
 
