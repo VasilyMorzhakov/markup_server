@@ -17,7 +17,7 @@ sudo docker start markup_server
 ```
 
 Environmental variables:
-   - SECRET_KEY - random key
+   - SECRET_KEY - random key for FLASK
    - MONGO_DB_ADDRESS - like mongodb:// ....  , that contain everything to connect
    - MONGO_COLLECTION - just a name of the collection for this service
    - AWS_KEY
@@ -25,9 +25,14 @@ Environmental variables:
 
 You can exclude the SSL certificate by changing protocol in nginx config
 
-Also, to debug, you can run <b>python3 main.py</b> from app folder.
 
-To add a new user, run <b>add_user.sh role token</b> (role - "admin" or another, for example, "operator") and a token. Then, you can register a new user passing him the token and the following link: <b>your_site.com/register/role/token</b>.
+To add a new user, run <b>add_user.sh role token</b> and a token. Then, you can register a new user passing him the token and the following link: <b>your_site.com/register/role/token</b>.
+
+Or, being an admin, you can add user through the address line: /add_pre_user/
+
+Possible roles for users:
+  - admin
+  - operator
 
 All html templates are placed in the folder <b>templates</b> with corresponding names, described in config.json
 
@@ -36,3 +41,9 @@ All html templates are placed in the folder <b>templates</b> with corresponding 
 There are two ways to upload new data to markup. 
 1) Just choose files in "upload" on the site <b>your_site.com/markup/<application_name></b>
 2) Or your can upload files through POST requests. ('/upload/<string:application>'). Using API you also can upload results from an ML machine throug '/upload_result/<application>' attaching 2 files: image + json. Then, you'll see pre-marked up images in b>your_site.com/markup/<application_name></b>
+
+<h3>Debug</h3>
+
+Also, to debug, you can run <b>python3 main.py</b> from app folder.
+
+You'll also need two more env variables: DEBUG_ADMIN_EMAIL and DEBUG_ADMIN_PASSWORD.

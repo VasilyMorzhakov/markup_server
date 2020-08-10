@@ -112,7 +112,7 @@ def add_pre_user(role,token):
     user=db.get_user(current_user.id)
     if user['role']!='admin':
         return 'You should be an admin'
-    b.add_pre_user(role,token)
+    db.add_pre_user(role,token)
     return "pre user was added"
     
 
@@ -316,5 +316,5 @@ def savePost(application):
 
 if __name__=='__main__':
     
-    add_user(os.environ['DEBUG_AMDIN_EMAIL'],os.environ['DEBUG_AMDIN_EMAIL'],os.environ['DEBUG_AMDIN_PASSWORD'],'admin')
+    db.add_user(os.environ['DEBUG_ADMIN_EMAIL'],os.environ['DEBUG_ADMIN_EMAIL'],os.environ['DEBUG_ADMIN_PASSWORD'],'admin')
     app.run(host='0.0.0.0',port=5000)
