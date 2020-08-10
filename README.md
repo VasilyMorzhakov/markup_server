@@ -3,22 +3,18 @@ This is a markup server, which may be connected to an ML core.
 
 Pay attention to YOUR_SITE before build docker - this should correspond to your site name.
 
-To run the docker from Docker Hub, for example:
+You can build and run:
 
 ```
-sudo docker system prune
-sudo docker stop markup_server
-sudo docker rm markup_server
-echo "YOUR_DOCKER_HUB_PASSWORD" | sudo docker login -u "YOUR_DOCKER_HUB_PASS" --password-stdin
-sudo docker pull "IMAGE_NAME"
+sudo docker build -t markup .
+
 sudo docker create --name markup_server -p 27017:27017 -p 443:443 \
             -e ....
-            "IMAGE_NAME"
+            markup:latest
 sudo docker cp ssl_and_bundle.crt markup_server:/app/key.crt
 sudo docker cp key.pem markup_server:/app/key.pem
 sudo docker start markup_server
 ```
-
 
 Environmental variables:
    - SECRET_KEY - random key
