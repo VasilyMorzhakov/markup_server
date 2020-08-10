@@ -315,4 +315,6 @@ def savePost(application):
         return "no such application"
 
 if __name__=='__main__':
+    
+    add_user(os.environ['DEBUG_AMDIN_EMAIL'],os.environ['DEBUG_AMDIN_EMAIL'],os.environ['DEBUG_AMDIN_PASSWORD'],'admin')
     app.run(host='0.0.0.0',port=5000)
